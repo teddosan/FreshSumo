@@ -34,38 +34,57 @@ initDatabase();
 
 async function updateDailyResults(day: number) {
   const basho = "202603";
-  const url = `https://sumo-api.com/api/basho/${basho}/results/${day}`;
+  // The official endpoint for match results
+  const url =
+    `https://www.sumo-api.com/api/basho/${basho}/torikumi/Makuuchi/${day}`;
 
   const response = await fetch(url);
-  const data = await response.json();
+  const data = await response.json(); // This is an array of bouts
 
   const db = new DB("sumo.db");
 
-  db.transaction(() => {
-    // The API provides results in 'east' and 'west' blocks
-    const allResults = [...data.east, ...data.west];
+  // Replace the loop in your updateDailyResults function with this:
 
-    for (const record of allResults) {
-      // Use the correct keys: shikonaEn, opponentShikonaEn, result
+  const matches = data.torikumi || []; // Access the 'torikumi' array
+
+  db.transaction(() => {
+    for (const bout of matches) {
+      // 1. Handle the EAST wrestler
       db.query(
         `
-        INSERT OR REPLACE INTO daily_results 
-        (basho_id, day, rikishi_name, opponent_name, result, kimarite) 
-        VALUES (?, ?, ?, ?, ?, ?)`,
+      INSERT OR REPLACE INTO daily_results 
+      (basho_id, day, rikishi_name, opponent_name, result, kimarite) 
+      VALUES (?, ?, ?, ?, ?, ?)`,
         [
-          basho,
-          day,
-          record.shikonaEn, // 👈 Match this to the JSON
-          record.opponentShikonaEn, // 👈 Match this to the JSON
-          record.result, // 'win' or 'loss'
-          record.kimarite, // e.g. 'yorikiri'
+          bout.bashoId,
+          bout.day,
+          bout.eastShikona,
+          bout.westShikona,
+          bout.winnerEn === bout.eastShikona ? "win" : "loss",
+          bout.kimarite,
+        ],
+      );
+
+      // 2. Handle the WEST wrestler
+      db.query(
+        `
+      INSERT OR REPLACE INTO daily_results 
+      (basho_id, day, rikishi_name, opponent_name, result, kimarite) 
+      VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          bout.bashoId,
+          bout.day,
+          bout.westShikona,
+          bout.eastShikona,
+          bout.winnerEn === bout.westShikona ? "win" : "loss",
+          bout.kimarite,
         ],
       );
     }
   });
 
   db.close();
-  console.log(`✅ Day ${day} synced!`);
+  console.log(`✅ Day ${day} synced with official Torikumi data.`);
 }
 
 async function syncFullTournament() {
