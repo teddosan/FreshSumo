@@ -2,125 +2,98 @@ import { Handlers, PageProps } from "$fresh/server.ts";
 import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
 import SyncButton from "../islands/SyncButton.tsx";
 
-interface DashboardData {
-  leaderboard: [string, number][];
-  mvp: [string, number, string] | null;
+interface Standings {
+  owner: string;
+  wins: number;
+  totalMatches: number;
+  winRate: string;
 }
 
-export const handler: Handlers<DashboardData> = {
+export const handler: Handlers = {
   GET(_req, ctx) {
     const db = new DB("sumo.db");
-
-    // 1. Calculate Leaderboard
-    const leaderboard = db.query(`
-      SELECT w.owner, COUNT(r.result) as wins
+    
+    // 1. Fetch detailed standings
+    const rows = db.query(`
+      SELECT 
+        w.owner, 
+        COUNT(CASE WHEN r.result = 'win' THEN 1 END) as wins,
+        COUNT(r.result) as total
       FROM daily_results r
       JOIN wrestlers w ON r.rikishi_name = w.name
-      WHERE r.result = 'win' AND r.basho_id = '202603'
+      WHERE r.basho_id = '202603'
       GROUP BY w.owner
       ORDER BY wins DESC
-    `) as [string, number][];
-
-    // 2. Find Tournament MVP
-    const mvpResult = db.query(`
-      SELECT r.rikishi_name, COUNT(*) as wins, w.owner
-      FROM daily_results r
-      JOIN wrestlers w ON r.rikishi_name = w.name
-      WHERE r.result = 'win' AND r.basho_id = '202603'
-      GROUP BY r.rikishi_name
-      ORDER BY wins DESC
-      LIMIT 1
     `);
 
-    const mvp = mvpResult.length > 0
-      ? (mvpResult[0] as [string, number, string])
-      : null;
+    const standings: Standings[] = rows.map(([owner, wins, total]: any) => ({
+      owner,
+      wins,
+      totalMatches: total,
+      winRate: ((wins / total) * 100).toFixed(1) + "%"
+    }));
 
     db.close();
-    return ctx.render({ leaderboard, mvp });
+    return ctx.render({ standings });
   },
 };
 
-export default function Home({ data }: PageProps<DashboardData>) {
+export default function Home({ data }: PageProps) {
   return (
-    <div class="min-h-screen bg-gray-100 p-4 md:p-8">
-      <div class="max-w-2xl mx-auto">
-        <header class="text-center mb-10">
-          <h1 class="text-5xl font-black text-indigo-900 mb-2">🎏 SUMO BASH</h1>
-          <p class="text-lg text-gray-600 font-medium">
-            Dublin, OH League • March 2026
-          </p>
-        </header>
+    <div class="min-h-screen bg-slate-50 font-sans text-slate-900">
+      {/* Header Section */}
+      <header class="bg-indigo-900 text-white py-10 px-4 text-center shadow-lg">
+        <h1 class="text-4xl font-black tracking-tighter uppercase mb-2">
+          🎏 Columbus Fantasy Sumo League
+        </h1>
+        <p class="text-indigo-200 font-medium">March 2026 Basho • Final Standings</p>
+      </header>
 
-        {/* --- LEADERBOARD SECTION --- */}
-        <section class="space-y-4 mb-10">
-          <h2 class="text-xl font-bold text-gray-700 ml-2 italic">Standings</h2>
-          {data.leaderboard.map(([owner, wins], index) => (
-            <div
-              class={`relative overflow-hidden p-6 rounded-2xl shadow-sm border-2 ${
-                index === 0
-                  ? "bg-amber-50 border-amber-400"
-                  : "bg-white border-transparent"
-              }`}
-            >
-              <div class="flex justify-between items-center relative z-10">
+      <main class="max-w-xl mx-auto -mt-8 p-4 pb-20">
+        {/* Leaderboard Section */}
+        <div class="space-y-4">
+          {data.standings.map((player: Standings, index: number) => (
+            <div class={`bg-white rounded-2xl p-6 shadow-sm border-2 flex items-center justify-between ${
+              index === 0 ? "border-amber-400 ring-4 ring-amber-100" : "border-transparent"
+            }`}>
+              <div class="flex items-center gap-4">
+                <span class={`text-2xl font-black w-10 h-10 flex items-center justify-center rounded-full ${
+                  index === 0 ? "bg-amber-400 text-white" : "bg-slate-100 text-slate-400"
+                }`}>
+                  {index + 1}
+                </span>
                 <div>
-                  <p class="text-xs font-bold text-amber-600 uppercase mb-1">
-                    {index === 0 ? "👑 Basho Champion" : `Rank #${index + 1}`}
-                  </p>
-                  <h3 class="text-2xl font-black text-gray-900">{owner}</h3>
+                  <h2 class="text-xl font-bold">{player.owner}</h2>
+                  <p class="text-sm text-slate-500 font-medium">{player.winRate} Win Rate</p>
                 </div>
-                <div class="text-right">
-                  <span class="text-4xl font-black text-indigo-900">
-                    {wins}
-                  </span>
-                  <p class="text-xs font-bold text-gray-400 uppercase">Wins</p>
-                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-3xl font-black text-indigo-900">{player.wins}</span>
+                <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400">Wins</p>
               </div>
             </div>
           ))}
-        </section>
+        </div>
 
-        {/* --- MVP HIGHLIGHT --- */}
-        {data.mvp && (
-          <div class="bg-indigo-900 text-white p-6 rounded-2xl shadow-xl mb-10 flex items-center justify-between">
-            <div>
-              <p class="text-indigo-300 text-xs font-bold uppercase mb-1">
-                Tournament MVP
-              </p>
-              <h3 class="text-2xl font-bold">{data.mvp[0]}</h3>
-              <p class="text-sm opacity-80">Drafted by {data.mvp[2]}</p>
-            </div>
-            <div class="bg-white/10 p-4 rounded-full">
-              <span class="text-2xl font-black">{data.mvp[1]} 🏆</span>
-            </div>
-          </div>
-        )}
-
-        {/* --- COMMAND CENTER --- */}
-        <div class="grid grid-cols-1 gap-4">
+        {/* Action Center */}
+        <div class="mt-10 space-y-3">
+          <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 px-2">Controls</h3>
           <SyncButton />
-
-          <div class="grid grid-cols-2 gap-4">
-            <a
-              href="/draft"
-              class="flex items-center justify-center bg-white border-2 border-indigo-100 p-4 rounded-xl font-bold text-indigo-600 hover:bg-indigo-50 transition"
-            >
-              🎏 Draft Room
+          
+          <div class="grid grid-cols-2 gap-3">
+            <a href="/results" class="bg-white border border-slate-200 py-3 rounded-xl text-center font-bold text-slate-600 hover:bg-slate-50">
+              📊 All Bouts
             </a>
-            <a
-              href="/results"
-              class="flex items-center justify-center bg-white border-2 border-indigo-100 p-4 rounded-xl font-bold text-indigo-600 hover:bg-indigo-50 transition"
-            >
-              📊 All Results
+            <a href="/draft" class="bg-white border border-slate-200 py-3 rounded-xl text-center font-bold text-slate-600 hover:bg-slate-50">
+              🎏 May Draft
             </a>
           </div>
         </div>
-
-        <footer class="mt-12 text-center text-gray-400 text-sm">
-          Next Tournament: May 2026 • Osaka, Japan
-        </footer>
-      </div>
+      </main>
+      
+      <footer class="text-center py-6 text-slate-400 text-xs">
+        Dublin, Ohio Sumo Tech • v1.0
+      </footer>
     </div>
   );
 }
