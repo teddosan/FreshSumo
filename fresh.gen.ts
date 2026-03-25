@@ -9,6 +9,7 @@ import * as $api_release from "./routes/api/release.ts";
 import * as $draft from "./routes/draft.tsx";
 import * as $greet_name_ from "./routes/greet/[name].tsx";
 import * as $index from "./routes/index.tsx";
+import * as $utils_auth from "./routes/utils/auth.ts";
 import * as $Counter from "./islands/Counter.tsx";
 import * as $DraftTool from "./islands/DraftTool.tsx";
 import * as $ReleaseButton from "./islands/ReleaseButton.tsx";
@@ -24,6 +25,7 @@ const manifest = {
     "./routes/draft.tsx": $draft,
     "./routes/greet/[name].tsx": $greet_name_,
     "./routes/index.tsx": $index,
+    "./routes/utils/auth.ts": $utils_auth,
   },
   islands: {
     "./islands/Counter.tsx": $Counter,
