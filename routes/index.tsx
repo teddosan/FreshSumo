@@ -1,6 +1,11 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
+import { getCookies } from "$std/http/cookie.ts";
 import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
 import SyncButton from "../islands/SyncButton.tsx";
+
+interface Data {
+  isAllowed: boolean;
+}
 
 interface Standings {
   owner: string;
@@ -12,7 +17,7 @@ interface Standings {
 export const handler: Handlers = {
   GET(_req, ctx) {
     const db = new DB("sumo.db");
-    
+    const cookies = getCookies(_req.headers); 
     // 1. Fetch detailed standings
     const rows = db.query(`
       SELECT 
@@ -34,9 +39,26 @@ export const handler: Handlers = {
     }));
 
     db.close();
-    return ctx.render({ standings });
+
+    if (cookies.auth === "bar") {
+      return ctx.render({ standings });
+    } else {
+      const url = new URL(_req.url);
+      url.pathname = "/";
+      return Response.redirect(url);
+    }
   },
 };
+
+function Login() {
+  return (
+    <form method="post" action="/api/login">
+      <input type="text" name="username" />
+      <input type="password" name="password" />
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
 
 export default function Home({ data }: PageProps) {
   return (
@@ -92,7 +114,7 @@ export default function Home({ data }: PageProps) {
       </main>
       
       <footer class="text-center py-6 text-slate-400 text-xs">
-        Dublin, Ohio Sumo Tech • v1.0
+        You currently {data.isAllowed ? "are" : "are not"} logged in.
       </footer>
     </div>
   );
