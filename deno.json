@@ -22,6 +22,7 @@
   ],
   "imports": {
     "$fresh/": "https://deno.land/x/fresh@1.7.3/",
+    "bcrypt": "npm:bcrypt@^6.0.0",
     "better-sqlite3": "npm:better-sqlite3@^12.8.0",
     "preact": "https://esm.sh/preact@10.22.0",
     "preact/": "https://esm.sh/preact@10.22.0/",
