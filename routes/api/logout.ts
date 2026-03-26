@@ -1,23 +1,30 @@
+import { Handlers } from "$fresh/server.ts";
 import { deleteCookie, getCookies } from "$std/http/cookie.ts";
-import { deleteSession } from "../../lib/auth.ts";
+import { deleteSession } from "../../utils/auth.ts";
 
-export function POST(req: Request) {
-  const cookies = getCookies(req.headers);
-  const sessionId = cookies.session;
+export const handler: Handlers = {
+  GET() {
+    return new Response(null, {
+      status: 303,
+      headers: {
+        Location: "/login",
+      },
+    });
+  },
 
-  if (sessionId) {
-    deleteSession(sessionId);
-  }
+  POST(req: Request) {
+    const cookies = getCookies(req.headers);
+    const sessionId = cookies.session;
 
-  const headers = new Headers();
+    if (sessionId) {
+      deleteSession(sessionId);
+    }
 
-  deleteCookie(headers, "session", { path: "/" });
+    const headers = new Headers();
 
-  return new Response(null, {
-    status: 303,
-    headers: {
-      ...Object.fromEntries(headers),
-      Location: "/login",
-    },
-  });
-}
+    deleteCookie(headers, "session", { path: "/" });
+
+    headers.set("Location", "/login");
+    return new Response(null, { status: 303, headers });
+  },
+};

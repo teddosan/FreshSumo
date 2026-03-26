@@ -1,43 +1,50 @@
+import { Handlers } from "$fresh/server.ts";
 import { setCookie } from "$std/http/cookie.ts";
 import { getUserByEmail } from "../../utils/auth_db.ts";
 import { createSession } from "../../utils/auth.ts";
 import bcrypt from "bcrypt";
 
-export async function POST(req: Request) {
-  const body = await req.formData();
+export const handler: Handlers = {
+  GET() {
+    return new Response(null, {
+      status: 303,
+      headers: {
+        Location: "/login",
+      },
+    });
+  },
 
-  const email = body.get("email")?.toString() || "";
-  const password = body.get("password")?.toString() || "";
+  async POST(req: Request) {
+    const body = await req.formData();
 
-  const user = getUserByEmail(email);
+    const email = body.get("email")?.toString() || "";
+    const password = body.get("password")?.toString() || "";
 
-  if (!user) {
-    return new Response("Invalid credentials", { status: 401 });
-  }
+    const user = getUserByEmail(email);
 
-  const valid = await bcrypt.compare(password, user.password_hash);
+    if (!user) {
+      return new Response("Invalid credentials", { status: 401 });
+    }
 
-  if (!valid) {
-    return new Response("Invalid credentials", { status: 401 });
-  }
+    const valid = await bcrypt.compare(password, user.password_hash);
 
-  const sessionId = createSession(user.id);
+    if (!valid) {
+      return new Response("Invalid credentials", { status: 401 });
+    }
 
-  const headers = new Headers();
+    const sessionId = createSession(user.id);
 
-  setCookie(headers, {
-    name: "session",
-    value: sessionId,
-    httpOnly: true,
-    path: "/",
-    sameSite: "Lax",
-  });
+    const headers = new Headers();
 
-  return new Response(null, {
-    status: 303,
-    headers: {
-      ...Object.fromEntries(headers),
-      Location: "/dashboard",
-    },
-  });
-}
+    setCookie(headers, {
+      name: "session",
+      value: sessionId,
+      httpOnly: true,
+      path: "/",
+      sameSite: "Lax",
+    });
+
+    headers.set("Location", "/");
+    return new Response(null, { status: 303, headers });
+  },
+};

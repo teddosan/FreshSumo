@@ -4,6 +4,8 @@ import SyncButton from "../islands/SyncButton.tsx";
 
 interface Data {
   isAllowed: boolean;
+  userEmail: string | null;
+  standings: Standings[];
 }
 
 interface Standings {
@@ -13,10 +15,14 @@ interface Standings {
   winRate: string;
 }
 
-export const handler: Handlers = {
+export const handler: Handlers<Data> = {
   GET(_req, ctx) {
     const db = new DB("sumo.db");
-   
+
+    const user = ctx.state.user as { email?: string } | null;
+    const isAllowed = !!user;
+    const userEmail = user?.email ?? null;
+
     const rows = db.query(`
       SELECT 
         w.owner, 
@@ -29,20 +35,26 @@ export const handler: Handlers = {
       ORDER BY wins DESC
     `);
 
-    const standings: Standings[] = rows.map(([owner, wins, total]: any) => ({
+    // SQLite returns loosely typed rows; we know this query returns:
+    // [owner:string, wins:number, total:number]
+    const standingsRows = rows as unknown as Array<[string, number, number]>;
+
+    const standings: Standings[] = standingsRows.map((
+      [owner, wins, total],
+    ) => ({
       owner,
       wins,
       totalMatches: total,
-      winRate: ((wins / total) * 100).toFixed(1) + "%"
+      winRate: ((wins / total) * 100).toFixed(1) + "%",
     }));
 
     db.close();
 
-    return ctx.render({ standings });
+    return ctx.render({ standings, isAllowed, userEmail });
   },
 };
 
-export default function Home({ data }: PageProps) {
+export default function Home({ data }: PageProps<Data>) {
   return (
     <div class="min-h-screen bg-slate-50 font-sans text-slate-900">
       {/* Header Section */}
@@ -50,30 +62,46 @@ export default function Home({ data }: PageProps) {
         <h1 class="text-4xl font-black tracking-tighter uppercase mb-2">
           🎏 Columbus Fantasy Sumo League
         </h1>
-        <p class="text-indigo-200 font-medium">March 2026 Basho • Final Standings</p>
+        <p class="text-indigo-200 font-medium">
+          March 2026 Basho • Final Standings
+        </p>
       </header>
 
       <main class="max-w-xl mx-auto -mt-8 p-4 pb-20">
         {/* Leaderboard Section */}
         <div class="space-y-4">
           {data.standings.map((player: Standings, index: number) => (
-            <div class={`bg-white rounded-2xl p-6 shadow-sm border-2 flex items-center justify-between ${
-              index === 0 ? "border-amber-400 ring-4 ring-amber-100" : "border-transparent"
-            }`}>
+            <div
+              class={`bg-white rounded-2xl p-6 shadow-sm border-2 flex items-center justify-between ${
+                index === 0
+                  ? "border-amber-400 ring-4 ring-amber-100"
+                  : "border-transparent"
+              }`}
+            >
               <div class="flex items-center gap-4">
-                <span class={`text-2xl font-black w-10 h-10 flex items-center justify-center rounded-full ${
-                  index === 0 ? "bg-amber-400 text-white" : "bg-slate-100 text-slate-400"
-                }`}>
+                <span
+                  class={`text-2xl font-black w-10 h-10 flex items-center justify-center rounded-full ${
+                    index === 0
+                      ? "bg-amber-400 text-white"
+                      : "bg-slate-100 text-slate-400"
+                  }`}
+                >
                   {index + 1}
                 </span>
                 <div>
                   <h2 class="text-xl font-bold">{player.owner}</h2>
-                  <p class="text-sm text-slate-500 font-medium">{player.winRate} Win Rate</p>
+                  <p class="text-sm text-slate-500 font-medium">
+                    {player.winRate} Win Rate
+                  </p>
                 </div>
               </div>
               <div class="text-right">
-                <span class="text-3xl font-black text-indigo-900">{player.wins}</span>
-                <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400">Wins</p>
+                <span class="text-3xl font-black text-indigo-900">
+                  {player.wins}
+                </span>
+                <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400">
+                  Wins
+                </p>
               </div>
             </div>
           ))}
@@ -81,22 +109,92 @@ export default function Home({ data }: PageProps) {
 
         {/* Action Center */}
         <div class="mt-10 space-y-3">
-          <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 px-2">Controls</h3>
+          {data.isAllowed
+            ? (
+              <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <div class="flex items-center justify-between gap-4">
+                  <div>
+                    <h3 class="text-sm font-bold uppercase tracking-widest text-slate-400">
+                      Dashboard
+                    </h3>
+                    <p class="mt-2 text-slate-900 font-bold">
+                      Signed in as{" "}
+                      <span class="text-indigo-700">{data.userEmail}</span>
+                    </p>
+                  </div>
+                  <form method="POST" action="/api/logout">
+                    <button
+                      type="submit"
+                      class="px-4 py-2 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 active:scale-95"
+                    >
+                      Logout
+                    </button>
+                  </form>
+                </div>
+              </section>
+            )
+            : (
+              <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <h3 class="text-sm font-bold uppercase tracking-widest text-slate-400">
+                  Login
+                </h3>
+                <p class="mt-2 text-slate-700 font-medium">
+                  Sign in to manage your draft.
+                </p>
+                <div class="mt-4 grid grid-cols-2 gap-3">
+                  <a
+                    href="/login"
+                    class="bg-white border border-slate-200 py-3 rounded-xl text-center font-bold text-slate-600 hover:bg-slate-50"
+                  >
+                    Login
+                  </a>
+                  <a
+                    href="/register"
+                    class="bg-indigo-600 border border-indigo-600 py-3 rounded-xl text-center font-bold text-white hover:bg-indigo-700"
+                  >
+                    Register
+                  </a>
+                </div>
+              </section>
+            )}
+
+          <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 px-2">
+            Controls
+          </h3>
           <SyncButton />
-          
+
           <div class="grid grid-cols-2 gap-3">
-            <a href="/results" class="bg-white border border-slate-200 py-3 rounded-xl text-center font-bold text-slate-600 hover:bg-slate-50">
+            <a
+              href="/results"
+              class="bg-white border border-slate-200 py-3 rounded-xl text-center font-bold text-slate-600 hover:bg-slate-50"
+            >
               📊 All Bouts
             </a>
-            <a href="/draft" class="bg-white border border-slate-200 py-3 rounded-xl text-center font-bold text-slate-600 hover:bg-slate-50">
-              🎏 May Draft
-            </a>
+            {data.isAllowed
+              ? (
+                <a
+                  href="/draft"
+                  class="bg-white border border-slate-200 py-3 rounded-xl text-center font-bold text-slate-600 hover:bg-slate-50"
+                >
+                  🎏 May Draft
+                </a>
+              )
+              : (
+                <a
+                  href="/login"
+                  class="bg-white border border-slate-200 py-3 rounded-xl text-center font-bold text-slate-600 hover:bg-slate-50"
+                >
+                  🔒 Login for Draft
+                </a>
+              )}
           </div>
         </div>
       </main>
-      
+
       <footer class="text-center py-6 text-slate-400 text-xs">
-        You currently {data.isAllowed ? "are" : "are not"} logged in.
+        {data.isAllowed
+          ? <>Signed in as {data.userEmail}</>
+          : <>You are not logged in.</>}
       </footer>
     </div>
   );
