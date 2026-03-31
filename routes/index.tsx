@@ -63,9 +63,20 @@ export default function Home({ data }: PageProps<Data>) {
           🎏 Columbus Fantasy Sumo League
         </h1>
         <p class="text-indigo-200 font-medium">
-          March 2026 Basho • Final Standings
+          March 2026 Basho • Standings
         </p>
       </header>
+
+      <aside class="hidden md:flex flex-col w-64 bg-indigo-900 border-r border-gray-600 p-6">
+        <h1 class="text-2xl font-bold text-white mb-8">SumoFantasy</h1>
+        <nav class="space-y-4">
+          <a href="#" class="block hover:text-white">
+            Tournament Standings
+          </a>
+          <a href="#" class="block hover:text-white">My Stable</a>
+          <a href="#" class="block hover:text-white">Wrestler Database</a>
+        </nav>
+      </aside>
 
       <main class="max-w-xl mx-auto -mt-8 p-4 pb-20">
         {/* Leaderboard Section */}

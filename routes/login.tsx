@@ -4,7 +4,7 @@ export default function Login() {
       <div class="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
         <h1 class="text-2xl font-black text-slate-900 mb-6">Login</h1>
 
-        <form method="POST" action="/api/register" class="space-y-5">
+        <form method="POST" action="/api/login" class="space-y-5">
           <div class="space-y-2">
             <label
               class="block text-sm font-bold tracking-wide text-slate-700"
