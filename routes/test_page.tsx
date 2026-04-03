@@ -17,7 +17,7 @@ export default function SumoDashboard() {
       {/* Main Content */}
       <main class="flex-1 p-4 md:p-8">
         {/* Header Ticker */}
-        <div class="bg-red-600/40 border border-red-900 rounded-lg p-3 mb-6 flex justify-between items-center">
+        <div class="bg-red-600/40 border border-red-900 rounded-lg p-3 mb-6 flex justify-center items-center">
           <span class="font-bold">LIVE: Haru Basho Day 10</span>
           <span class="text-sm">Next Match: Terunofuji vs. Kirishima</span>
         </div>

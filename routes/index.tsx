@@ -6,6 +6,7 @@ interface Data {
   isAllowed: boolean;
   userEmail: string | null;
   standings: Standings[];
+  isAdmin: boolean;
 }
 
 interface Standings {
@@ -19,7 +20,7 @@ export const handler: Handlers<Data> = {
   GET(_req, ctx) {
     const db = new DB("sumo.db");
 
-    const user = ctx.state.user as { email?: string } | null;
+    const user = ctx.state.user as { email?: string; isAdmin?: boolean } | null;
     const isAllowed = !!user;
     const userEmail = user?.email ?? null;
 
@@ -50,7 +51,12 @@ export const handler: Handlers<Data> = {
 
     db.close();
 
-    return ctx.render({ standings, isAllowed, userEmail });
+    return ctx.render({
+      standings,
+      isAllowed,
+      userEmail,
+      isAdmin: user?.isAdmin || false,
+    });
   },
 };
 
@@ -61,10 +67,10 @@ export default function Home({ data }: PageProps<Data>) {
       {/* MAIN CONTENT AREA */}
       <div class="flex-grow">
         <header class="bg-indigo-900 text-white py-12 px-8 shadow-lg">
-          <h1 class="text-4xl font-black tracking-tighter uppercase mb-2">
+          <h1 class="text-4xl font-black tracking-tighter uppercase mb-2 text-center">
             Columbus Fantasy Sumo League
           </h1>
-          <p class="text-indigo-200 font-medium">
+          <p class="text-indigo-200 font-medium text-center">
             March 2026 Basho • Standings
           </p>
         </header>
@@ -111,6 +117,7 @@ export default function Home({ data }: PageProps<Data>) {
           <footer class="mt-12 text-center text-slate-400 text-xs">
             © 2026 Columbus Sumo League •{" "}
             {data.isAllowed ? `Session: ${data.userEmail}` : "Guest Access"}
+            {data.isAdmin ? " • Admin Privileges" : " • Peasant"}
           </footer>
         </main>
       </div>

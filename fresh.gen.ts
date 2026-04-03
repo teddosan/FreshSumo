@@ -4,6 +4,7 @@
 
 import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
+import * as $_layout from "./routes/_layout.tsx";
 import * as $_middleware from "./routes/_middleware.ts";
 import * as $api_joke from "./routes/api/joke.ts";
 import * as $api_login from "./routes/api/login.ts";
@@ -11,14 +12,16 @@ import * as $api_logout from "./routes/api/logout.ts";
 import * as $api_register from "./routes/api/register.ts";
 import * as $api_release from "./routes/api/release.ts";
 import * as $dashboard from "./routes/dashboard.tsx";
-import * as $draft from "./routes/draft.tsx";
 import * as $greet_name_ from "./routes/greet/[name].tsx";
 import * as $index from "./routes/index.tsx";
 import * as $login from "./routes/login.tsx";
 import * as $register from "./routes/register.tsx";
-import * as $Counter from "./islands/Counter.tsx";
+import * as $rishiki from "./routes/rishiki.tsx";
+import * as $stable from "./routes/stable.tsx";
+import * as $test_page from "./routes/test_page.tsx";
 import * as $DraftTool from "./islands/DraftTool.tsx";
 import * as $ReleaseButton from "./islands/ReleaseButton.tsx";
+import * as $SpoilerShield from "./islands/SpoilerShield.tsx";
 import * as $SyncButton from "./islands/SyncButton.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
@@ -26,6 +29,7 @@ const manifest = {
   routes: {
     "./routes/_404.tsx": $_404,
     "./routes/_app.tsx": $_app,
+    "./routes/_layout.tsx": $_layout,
     "./routes/_middleware.ts": $_middleware,
     "./routes/api/joke.ts": $api_joke,
     "./routes/api/login.ts": $api_login,
@@ -33,16 +37,18 @@ const manifest = {
     "./routes/api/register.ts": $api_register,
     "./routes/api/release.ts": $api_release,
     "./routes/dashboard.tsx": $dashboard,
-    "./routes/draft.tsx": $draft,
     "./routes/greet/[name].tsx": $greet_name_,
     "./routes/index.tsx": $index,
     "./routes/login.tsx": $login,
     "./routes/register.tsx": $register,
+    "./routes/rishiki.tsx": $rishiki,
+    "./routes/stable.tsx": $stable,
+    "./routes/test_page.tsx": $test_page,
   },
   islands: {
-    "./islands/Counter.tsx": $Counter,
     "./islands/DraftTool.tsx": $DraftTool,
     "./islands/ReleaseButton.tsx": $ReleaseButton,
+    "./islands/SpoilerShield.tsx": $SpoilerShield,
     "./islands/SyncButton.tsx": $SyncButton,
   },
   baseUrl: import.meta.url,

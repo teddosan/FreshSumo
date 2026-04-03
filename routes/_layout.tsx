@@ -42,14 +42,14 @@ export default function Layout({ Component, state, url }: PageProps) {
           </a>
 
           <a
-            href="/results"
+            href="/rishiki"
             class={`block p-2 rounded-lg font-bold transition ${
               pathname === "/results"
                 ? "bg-indigo-800 text-white"
                 : "hover:bg-indigo-900"
             }`}
           >
-            📊 All Bouts
+            📊 All Rishiki
           </a>
         </nav>
         <div class="mt-8">

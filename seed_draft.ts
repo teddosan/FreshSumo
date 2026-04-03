@@ -16,9 +16,9 @@ db.execute(`
 const picks = [
   { name: "Hoshoryu", owner: "Dad" },
   { name: "Kotozakura", owner: "Dad" },
-  { name: "Onosato", owner: "Son16" },
-  { name: "Takerufuji", owner: "Son14" },
-  { name: "Kirishima", owner: "Son14" },
+  { name: "Onosato", owner: "Kevin" },
+  { name: "Takerufuji", owner: "Kevin" },
+  { name: "Kirishima", owner: "Mike" },
 ];
 
 console.log("📝 Registering picks for March 2026...");
