@@ -5,6 +5,7 @@ export default function Layout({ Component, state, url }: PageProps) {
   // We check the URL to see which link should look "active"
   const pathname = url.pathname;
   const user = state.user as { email?: string } | null;
+  const watchedDay = state.watchedDay ? parseInt(state.watchedDay) : 0;
 
   return (
     <div class="flex min-h-screen bg-slate-50 font-sans text-slate-900">
@@ -53,7 +54,7 @@ export default function Layout({ Component, state, url }: PageProps) {
           </a>
         </nav>
         <div class="mt-8">
-          <SpoilerShield />
+          <SpoilerShield currentDay={watchedDay} />
         </div>
 
         {/* Action Center stays at the bottom of the sidebar globally */}
