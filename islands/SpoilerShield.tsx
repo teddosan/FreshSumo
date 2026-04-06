@@ -1,46 +1,43 @@
-import { useSignal } from "@preact/signals";
-import { useEffect } from "preact/hooks";
+interface Props {
+  currentDay?: number;
+}
 
-export default function SpoilerShield() {
-  // Default to Day 0 (show nothing) or Day 15 (show all)
-  const watchedUntil = useSignal(0);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("sumo_watched_day");
-    if (saved) watchedUntil.value = parseInt(saved);
-  }, []);
-
+export default function SpoilerShield({ currentDay }: Props) {
   const updateDay = (day: number) => {
-    watchedUntil.value = day;
-    localStorage.setItem("sumo_watched_day", day.toString());
-    // Optional: Reload to filter server-side results or
-    // use a global Signal to hide elements instantly.
-    location.reload();
+    // 1. Set the cookie
+    document.cookie =
+      `sumo_watched_day=${day}; path=/; max-age=31536000; SameSite=Lax`;
+
+    // 2. Refresh by navigating to the current path
+    // This is more reliable than reload() in some browsers
+    window.location.href = window.location.pathname;
   };
 
   return (
-    <div class="bg-indigo-900/50 p-4 rounded-xl border border-indigo-700">
-      <h3 class="text-xs font-bold uppercase tracking-widest text-indigo-300 mb-3">
-        🚫 Spoiler Shield
+    <div class="bg-indigo-900/40 p-4 rounded-2xl border border-indigo-800 shadow-inner">
+      <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-4 flex items-center gap-2">
+        <span>🚫</span> Spoiler Shield
       </h3>
-      <p class="text-xs text-indigo-200 mb-3">
-        Hide results past:{" "}
-        <span class="font-bold text-white">Day {watchedUntil.value}</span>
-      </p>
+
       <div class="grid grid-cols-5 gap-1">
         {Array.from({ length: 15 }, (_, i) => i + 1).map((day) => (
           <button
+            type="button"
             onClick={() => updateDay(day)}
-            class={`text-[10px] py-1 rounded font-bold transition ${
-              watchedUntil.value === day
-                ? "bg-amber-400 text-indigo-900"
-                : "bg-indigo-800 text-indigo-300 hover:bg-indigo-700"
+            class={`aspect-square flex items-center justify-center rounded-lg text-[11px] font-bold transition-all active:scale-90 ${
+              currentDay === day
+                ? "bg-amber-400 text-indigo-950 shadow-[0_0_15px_rgba(251,191,36,0.3)]"
+                : "bg-indigo-950/50 text-indigo-300 hover:bg-indigo-800 border border-indigo-700/50"
             }`}
           >
             {day}
           </button>
         ))}
       </div>
+
+      <p class="mt-4 text-[9px] text-center text-indigo-500 font-medium italic">
+        Viewing matches through Day {currentDay}
+      </p>
     </div>
   );
 }
