@@ -52,6 +52,19 @@ export default function Layout({ Component, state, url }: PageProps) {
           >
             📊 All Rishiki
           </a>
+
+          {state.isAdmin && (
+            <a
+              href="/admin"
+              class={`block p-2 rounded-lg font-bold transition ${
+                pathname === "/admin"
+                  ? "bg-indigo-800 text-white"
+                  : "hover:bg-indigo-900"
+              }`}
+            >
+              🛠️ Admin Panel
+            </a>
+          )}
         </nav>
         <div class="mt-8">
           <SpoilerShield currentDay={watchedDay} />

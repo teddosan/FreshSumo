@@ -8,7 +8,11 @@ export async function handler(req: Request, ctx: any) {
   const watchedDayNum = watchedDay ? parseInt(watchedDay) : 0;
 
   const user = sessionId ? getUserFromSession(sessionId) : null;
-  // Attach user to context
+  const isAdmin = user?.username === "teddosan";
+  console.log(user);
+  // 2. Attach the permission to the 'state'
+  ctx.state.isAdmin = isAdmin;
+
   ctx.state.user = user;
   ctx.state.watchedDay = watchedDayNum;
 
