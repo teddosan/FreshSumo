@@ -15,6 +15,8 @@ export async function handler(req: Request, ctx: any) {
 
   ctx.state.user = user;
   ctx.state.watchedDay = watchedDayNum;
-
+  console.log(
+    `Middleware: User=${user}, isAdmin=${isAdmin}, watchedDay=${watchedDayNum}`,
+  );
   return await ctx.next();
 }
