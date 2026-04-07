@@ -1,11 +1,11 @@
-import { PageProps } from "$fresh/server.ts";
 import SpoilerShield from "../islands/SpoilerShield.tsx";
+import type { PageProps } from "$fresh/server.ts";
 
 export default function Layout({ Component, state, url }: PageProps) {
   // We check the URL to see which link should look "active"
   const pathname = url.pathname;
-  const user = state.user as { email?: string } | null;
-  const watchedDay = state.watchedDay ? parseInt(state.watchedDay) : 0;
+  const user = state.user as { username?: string } | null;
+  const watchedDay = state.watchedDay as number | undefined;
 
   return (
     <div class="flex min-h-screen bg-slate-50 font-sans text-slate-900">
@@ -63,10 +63,13 @@ export default function Layout({ Component, state, url }: PageProps) {
             ? (
               <div class="space-y-3">
                 <p class="text-xs font-bold text-indigo-400 truncate">
-                  {user.email}
+                  {user.username}
                 </p>
                 <form method="POST" action="/api/logout">
-                  <button class="w-full py-2 rounded-xl text-sm bg-indigo-800 hover:bg-red-600 transition">
+                  <button
+                    type="submit"
+                    class="w-full py-2 rounded-xl text-sm bg-indigo-800 hover:bg-red-600 transition"
+                  >
                     Logout
                   </button>
                 </form>

@@ -4,7 +4,7 @@ import SyncButton from "../islands/SyncButton.tsx";
 
 interface Data {
   isAllowed: boolean;
-  userEmail: string | null;
+  username: string | null;
   standings: Standings[];
   isAdmin: boolean;
 }
@@ -19,10 +19,10 @@ interface Standings {
 export const handler: Handlers<Data> = {
   GET(_req, ctx) {
     const db = new DB("sumo.db");
-
-    const user = ctx.state.user as { email?: string; isAdmin?: boolean } | null;
+    const user = ctx.state.user as
+      | { username?: string; isAdmin?: boolean }
+      | null;
     const isAllowed = !!user;
-    const userEmail = user?.email ?? null;
 
     const rows = db.query(`
       SELECT 
@@ -54,7 +54,7 @@ export const handler: Handlers<Data> = {
     return ctx.render({
       standings,
       isAllowed,
-      userEmail,
+      username: user?.username || null,
       isAdmin: user?.isAdmin || false,
     });
   },
@@ -116,7 +116,7 @@ export default function Home({ data }: PageProps<Data>) {
 
           <footer class="mt-12 text-center text-slate-400 text-xs">
             © 2026 Columbus Sumo League •{" "}
-            {data.isAllowed ? `Session: ${data.userEmail}` : "Guest Access"}
+            {data.isAllowed ? `Session: ${data.username}` : "Guest Access"}
             {data.isAdmin ? " • Admin Privileges" : " • Peasant"}
           </footer>
         </main>

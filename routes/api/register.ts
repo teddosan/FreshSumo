@@ -2,7 +2,7 @@ import { Handlers } from "$fresh/server.ts";
 import { setCookie } from "$std/http/cookie.ts";
 import bcrypt from "bcrypt";
 
-import { createUser, getUserByEmail } from "../../utils/auth_db.ts";
+import { createUser, getUserByUsername } from "../../utils/auth_db.ts";
 import { createSession } from "../../utils/auth.ts";
 
 export const handler: Handlers = {
@@ -18,12 +18,12 @@ export const handler: Handlers = {
   async POST(req: Request) {
     const form = await req.formData();
 
-    const email = form.get("email")?.toString().trim() || "";
+    const username = form.get("username")?.toString().trim() || "";
     const password = form.get("password")?.toString() || "";
 
     // Basic validation
-    if (!email || !password) {
-      return new Response("Missing email or password", { status: 400 });
+    if (!username || !password) {
+      return new Response("Missing username or password", { status: 400 });
     }
 
     if (password.length < 6) {
@@ -33,7 +33,7 @@ export const handler: Handlers = {
     }
 
     // Check if user exists
-    const existingUser = getUserByEmail(email);
+    const existingUser = getUserByUsername(username);
 
     if (existingUser) {
       return new Response("User already exists", { status: 400 });
@@ -43,7 +43,7 @@ export const handler: Handlers = {
     const passwordHash = await bcrypt.hash(password, 10);
 
     // Create user
-    const user = createUser(email, passwordHash);
+    const user = createUser(username, passwordHash);
 
     // Create session (auto-login)
     const sessionId = createSession(user.id);

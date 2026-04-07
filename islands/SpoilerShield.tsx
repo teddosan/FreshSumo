@@ -1,16 +1,26 @@
+import { useEffect } from "preact/hooks";
+
 interface Props {
   currentDay?: number;
 }
 
 export default function SpoilerShield({ currentDay }: Props) {
+  console.log(currentDay);
+  console.log(typeof currentDay);
+  useEffect(() => {
+    // This will ONLY run in the browser after the page loads
+    console.log("Island hydrated! Cookie is:", document.cookie);
+  }, []);
+
   const updateDay = (day: number) => {
     // 1. Set the cookie
     document.cookie =
       `sumo_watched_day=${day}; path=/; max-age=31536000; SameSite=Lax`;
-
+    console.log("Got here");
     // 2. Refresh by navigating to the current path
     // This is more reliable than reload() in some browsers
-    window.location.href = window.location.pathname;
+    globalThis.location.href = globalThis.location.pathname;
+    return day;
   };
 
   return (
@@ -23,7 +33,7 @@ export default function SpoilerShield({ currentDay }: Props) {
         {Array.from({ length: 15 }, (_, i) => i + 1).map((day) => (
           <button
             type="button"
-            onClick={() => updateDay(day)}
+            onClick={() => currentDay = updateDay(day)}
             class={`aspect-square flex items-center justify-center rounded-lg text-[11px] font-bold transition-all active:scale-90 ${
               currentDay === day
                 ? "bg-amber-400 text-indigo-950 shadow-[0_0_15px_rgba(251,191,36,0.3)]"

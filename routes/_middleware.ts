@@ -4,11 +4,14 @@ import { getUserFromSession } from "../utils/auth.ts";
 export async function handler(req: Request, ctx: any) {
   const cookies = getCookies(req.headers);
   const sessionId = cookies.session;
+  const watchedDay = cookies.watchedDay;
+  const watchedDayNum = watchedDay ? parseInt(watchedDay) : 0;
 
   const user = sessionId ? getUserFromSession(sessionId) : null;
 
   // Attach user to context
   ctx.state.user = user;
+  ctx.state.watchedDay = watchedDayNum;
 
   return await ctx.next();
 }

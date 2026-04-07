@@ -8,16 +8,16 @@ export default function Register() {
           <div class="space-y-2">
             <label
               class="block text-sm font-bold tracking-wide text-slate-700"
-              for="email"
+              for="username"
             >
-              Email
+              Username
             </label>
             <input
-              id="email"
-              name="email"
-              type="email"
+              id="username"
+              name="username"
+              type="text"
               required
-              autocomplete="email"
+              autocomplete="username"
               class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100"
             />
           </div>
