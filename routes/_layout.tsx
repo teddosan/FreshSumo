@@ -5,7 +5,7 @@ export default function Layout({ Component, state, url }: PageProps) {
   // We check the URL to see which link should look "active"
   const pathname = url.pathname;
   const user = state.user as { username?: string } | null;
-  const watchedDay = state.watchedDay as number | undefined;
+  const watchedDay = state.watchedDay as number | 0;
 
   return (
     <div class="flex min-h-screen bg-slate-50 font-sans text-slate-900">

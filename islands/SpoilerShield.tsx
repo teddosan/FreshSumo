@@ -1,4 +1,5 @@
 import { useEffect } from "preact/hooks";
+import { getCookies } from "$std/http/cookie.ts";
 
 interface Props {
   currentDay?: number;
@@ -16,11 +17,9 @@ export default function SpoilerShield({ currentDay }: Props) {
     // 1. Set the cookie
     document.cookie =
       `sumo_watched_day=${day}; path=/; max-age=31536000; SameSite=Lax`;
-    console.log("Got here");
     // 2. Refresh by navigating to the current path
     // This is more reliable than reload() in some browsers
     globalThis.location.href = globalThis.location.pathname;
-    return day;
   };
 
   return (
@@ -33,7 +32,7 @@ export default function SpoilerShield({ currentDay }: Props) {
         {Array.from({ length: 15 }, (_, i) => i + 1).map((day) => (
           <button
             type="button"
-            onClick={() => currentDay = updateDay(day)}
+            onClick={() => updateDay(day)}
             class={`aspect-square flex items-center justify-center rounded-lg text-[11px] font-bold transition-all active:scale-90 ${
               currentDay === day
                 ? "bg-amber-400 text-indigo-950 shadow-[0_0_15px_rgba(251,191,36,0.3)]"
