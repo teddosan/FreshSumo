@@ -62,6 +62,8 @@ export function getUserById(id: string) {
   return {
     id: userId as string,
     username: username as string,
+    /// Change this to eventually check database for admin status
+    isAdmin: username === "teddosan",
   };
 }
 

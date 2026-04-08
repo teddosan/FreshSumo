@@ -18,7 +18,8 @@ export const handler: Handlers<DraftData> = {
     // Fetch all wrestlers currently in the stable
     // You can add "WHERE owner = 'Dad'" later to personalize it
     const rows = db.query(
-      "SELECT name, owner FROM wrestlers ORDER BY owner ASC",
+      "SELECT name, owner FROM wrestlers WHERE owner = ?",
+      [ctx.state.user?.username],
     );
 
     const myWrestlers = rows.map(([name, owner]: any) => ({
