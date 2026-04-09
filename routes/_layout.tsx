@@ -53,7 +53,7 @@ export default function Layout({ Component, state, url }: PageProps) {
             📊 All Rikishi
           </a>
 
-          {user.isAdmin && (
+          {user?.isAdmin && (
             <a
               href="/admin"
               class={`block p-2 rounded-lg font-bold transition ${

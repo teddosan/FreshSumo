@@ -38,8 +38,20 @@ export const handler: Handlers<Data> = {
       ORDER BY wins DESC
     `);
     // ----------------------------------------------------------------
-    // SQLite returns loosely typed rows; we know this query returns:
-    // [owner:string, wins:number, total:number]
+    // New database code below
+    /*
+    SELECT
+      b.owner,
+      SUM(CASE WHEN r.result = 'win' THEN 1 ELSE 0 END) as wins,
+      -- Logic to calculate win rate based on matches played
+      CAST(SUM(CASE WHEN r.result = 'win' THEN 1 ELSE 0 END) AS FLOAT) / COUNT(r.id) as winRate
+    FROM banzuke b
+    JOIN results r ON b.rikishi_id = r.rikishi_id AND b.tournament_id = r.tournament_id
+    WHERE b.tournament_id = ? -- e.g., March 2026 ID
+    GROUP BY b.owner
+    ORDER BY wins DESC;
+    */
+
     const standingsRows = rows as unknown as Array<[string, number, number]>;
 
     const standings: Standings[] = standingsRows.map((
