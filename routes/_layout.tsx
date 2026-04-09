@@ -50,10 +50,10 @@ export default function Layout({ Component, state, url }: PageProps) {
                 : "hover:bg-indigo-900"
             }`}
           >
-            📊 All Rishiki
+            📊 All Rikishi
           </a>
 
-          {user.isAdmin && (
+          {state.isAdmin && (
             <a
               href="/admin"
               class={`block p-2 rounded-lg font-bold transition ${

@@ -55,51 +55,55 @@ export const handler: Handlers<Data> = {
 
 export default function RikishiPage({ data }: PageProps<Data>) {
   return (
-    <div class="p-8 max-w-6xl mx-auto">
-      <div class="flex justify-between items-center mb-10">
-        <div>
-          <h1 class="text-4xl font-black text-indigo-900 tracking-tight">
-            RIKISHI
-          </h1>
-          <p class="text-slate-500 font-medium text-sm">
-            March 2026 Official Banzuke
-          </p>
-        </div>
-      </div>
+    <div class="min-h-screen bg-slate-50 font-sans text-slate-900">
+      {/* HERO HEADER SECTION */}
+      <header class="bg-indigo-900 text-white py-12 px-8 shadow-lg">
+        <h1 class="text-4xl font-black tracking-tighter uppercase mb-2 text-center">
+          Rikishi 👺
+        </h1>
+        <p class="text-indigo-200 font-medium text-center">
+          March 2026 Official Banzuke
+        </p>
+      </header>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {data.roster.length > 0
-          ? (
-            data.roster.map((r) => (
-              <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:border-indigo-200 transition-colors">
-                <div class="flex justify-between items-start">
-                  <span class="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-1 rounded">
-                    {r.rank}
-                  </span>
-                  <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
-                    {r.stable}
-                  </span>
+      {/* MAIN CONTENT AREA */}
+      <main class="max-w-6xl mx-auto -mt-8 p-6 pb-20">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {data.roster.length > 0
+            ? (
+              data.roster.map((r) => (
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:border-indigo-200 transition-all hover:shadow-md">
+                  <div class="flex justify-between items-start">
+                    <span class="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-1 rounded">
+                      {r.rank}
+                    </span>
+                    <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
+                      {r.stable}
+                    </span>
+                  </div>
+                  <h2 class="text-2xl font-bold text-slate-800 mt-2">
+                    {r.name}
+                  </h2>
+                  <div class="mt-4 pt-4 border-t border-dashed border-slate-100 flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-400 uppercase">
+                      Owner
+                    </span>
+                    <span class="text-sm font-black text-indigo-600">
+                      {r.owner}
+                    </span>
+                  </div>
                 </div>
-                <h2 class="text-2xl font-bold text-slate-800 mt-2">{r.name}</h2>
-                <div class="mt-4 pt-4 border-t border-dashed border-slate-100 flex justify-between items-center">
-                  <span class="text-xs font-bold text-slate-400 uppercase">
-                    Owner
-                  </span>
-                  <span class="text-sm font-black text-indigo-600">
-                    {r.owner}
-                  </span>
-                </div>
+              ))
+            )
+            : (
+              <div class="col-span-full py-20 text-center bg-slate-100 rounded-3xl border-2 border-dashed border-slate-200">
+                <p class="text-slate-400 font-bold">
+                  No wrestlers found in your stable.
+                </p>
               </div>
-            ))
-          )
-          : (
-            <div class="col-span-full py-20 text-center bg-slate-100 rounded-3xl border-2 border-dashed border-slate-200">
-              <p class="text-slate-400 font-bold">
-                No wrestlers found. Click "Sync" to populate the list!
-              </p>
-            </div>
-          )}
-      </div>
+            )}
+        </div>
+      </main>
     </div>
   );
 }
