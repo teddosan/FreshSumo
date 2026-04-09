@@ -43,9 +43,9 @@ export default function Layout({ Component, state, url }: PageProps) {
           </a>
 
           <a
-            href="/rishiki"
+            href="/rikishi"
             class={`block p-2 rounded-lg font-bold transition ${
-              pathname === "/results"
+              pathname === "/rikishi"
                 ? "bg-indigo-800 text-white"
                 : "hover:bg-indigo-900"
             }`}
@@ -53,7 +53,7 @@ export default function Layout({ Component, state, url }: PageProps) {
             📊 All Rikishi
           </a>
 
-          {state.isAdmin && (
+          {user.isAdmin && (
             <a
               href="/admin"
               class={`block p-2 rounded-lg font-bold transition ${

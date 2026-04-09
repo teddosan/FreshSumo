@@ -1,6 +1,5 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
-import SyncButton from "../islands/SyncButton.tsx";
 
 interface Data {
   isAllowed: boolean;
@@ -24,6 +23,8 @@ export const handler: Handlers<Data> = {
       | null;
     const isAllowed = !!user;
 
+    // This needs to be refactored for new database structure
+    //-----------------------------------------------------------------
     const rows = db.query(`
       SELECT 
         w.owner, 
@@ -32,10 +33,11 @@ export const handler: Handlers<Data> = {
       FROM daily_results r
       JOIN wrestlers w ON r.rikishi_name = w.name
       WHERE r.basho_id = '202603'
+      AND w.owner IS NOT NULL
       GROUP BY w.owner
       ORDER BY wins DESC
     `);
-
+    // ----------------------------------------------------------------
     // SQLite returns loosely typed rows; we know this query returns:
     // [owner:string, wins:number, total:number]
     const standingsRows = rows as unknown as Array<[string, number, number]>;

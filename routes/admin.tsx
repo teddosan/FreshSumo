@@ -19,7 +19,7 @@ export const handler: Handlers = {
     const db = new DB("sumo.db");
     try {
       const resp = await fetch(
-        "https://www.sumo-api.com/api/basho/202603/banzuke/Makuuchi",
+        "https://www.sumo-api.com/api/basho/202601/banzuke/Makuuchi",
       );
       const apiData = await resp.json();
 
@@ -44,7 +44,7 @@ export const handler: Handlers = {
           db.query(
             `
           INSERT INTO wrestlers (name, rank, stable, owner)
-          VALUES (?, ?, ?, 'Unassigned')
+          VALUES (?, ?, ?, null)
           ON CONFLICT(name) DO UPDATE SET
             rank = excluded.rank
         `,
@@ -69,8 +69,8 @@ export const handler: Handlers = {
 export default function AdminPage() {
   return (
     <div class="p-8">
-      <h1 class="text-3xl font-black text-white mb-4">Master Control</h1>
-      <p class="text-slate-400">
+      <h1 class="text-3xl font-black text-black mb-4">Master Control</h1>
+      <p class="text-slate-600">
         Welcome, Ted. You have full access to the Sumo DB.
       </p>
       {/* Add your "Clear Database" or "Manual Sync" buttons here */}
