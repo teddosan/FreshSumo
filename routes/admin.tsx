@@ -93,8 +93,24 @@ export const handler: Handlers = {
 
     // 2. Route the action
     switch (action) {
-      case "sync_banzuke":
-        return await handleSync(req); // Call a separate function to keep code tidy
+      case "sync_banzuke": {
+        console.log("Received Sync Banzuke Request");
+        const basho_id = formData.get("basho_id");
+        const url = new URL(req.url);
+
+        // Use the server to call the API
+        await fetch(`${url.origin}/api/sync-banzuke`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ basho_id }) // Pass the ID to the API
+        });
+
+        // Redirect back to admin so the user sees the dashboard again
+        return new Response(null, {
+          status: 303,
+          headers: { "Location": "/admin" },
+        });
+      }
 
       case "test_hook":
         return await handleTestHook(req);
@@ -119,24 +135,16 @@ export default function AdminPage() {
 
       <section class="mt-8 border p-4 rounded">
         <h2 class="text-xl font-semibold">Sync Banzuke</h2>
-        <form method="POST" action="/api/sync-banzuke">
-          <div class="mt-4">
-            <label class="block text-sm">Tournament ID (YYYYMM)</label>
-            <input
-              type="text"
-              name="basho_id"
-              placeholder="202605"
-              class="border p-2 rounded w-full"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            class="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            Fetch and Populate
-          </button>
-        </form>
+        <form method="POST"> {/* Submits to the same page */}
+        <input type="hidden" name="action" value="sync_banzuke" />
+        <div class="mt-4">
+          <label class="block text-sm">Tournament ID (YYYYMM)</label>
+          <input type="text" name="basho_id" required class="border p-2 rounded w-full" />
+        </div>
+        <button type="submit" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">
+          Fetch and Populate
+        </button>
+      </form>
       </section>
     </div>
   );
