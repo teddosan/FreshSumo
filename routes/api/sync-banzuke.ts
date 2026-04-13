@@ -1,10 +1,9 @@
-import { Handlers, PageProps } from "$fresh/server.ts";
 import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
-import { useComputed } from "@preact/signals";
+import { Handlers } from "$fresh/server.ts";
 
 async function handleSync(_req: Request) {
   const db = new DB("sumo.db");
-  const formData = await _req.formData();
+  const formData = _req.formData();
   const bashoId = formData.get("basho_id")?.toString();
 
   if (!bashoId) return new Response("Missing Tournament ID", { status: 400 });
@@ -70,74 +69,4 @@ async function handleTestHook(_req: Request) {
     status: 303,
     headers: { "Location": "/admin" },
   });
-}
-
-export const handler: Handlers = {
-  GET(_req, ctx) {
-    // 1. Check the 'state' set by your middleware
-    // We will set 'isAdmin' in the next step
-    if (!ctx.state.isAdmin) {
-      // Redirect unauthorized users to the home page
-      return new Response("", {
-        status: 303,
-        headers: { "Location": "/" },
-      });
-    }
-    return ctx.render();
-  },
-
-  async POST(req, _ctx) {
-    // 1. Extract the form data from the request body
-    const formData = await req.formData();
-    const action = formData.get("action");
-
-    // 2. Route the action
-    switch (action) {
-      case "sync_banzuke":
-        return await handleSync(req); // Call a separate function to keep code tidy
-
-      case "test_hook":
-        return await handleTestHook(req);
-
-      case "delete_user":
-        return await handleDeleteUser(req);
-
-      default:
-        // If someone sends a weird action, just send them back
-        return new Response("", {
-          status: 303,
-          headers: { "Location": "/admin" },
-        });
-    }
-  },
-};
-
-export default function AdminPage() {
-  return (
-    <div class="p-4">
-      <h1 class="text-2xl font-bold">Sumo Admin</h1>
-
-      <section class="mt-8 border p-4 rounded">
-        <h2 class="text-xl font-semibold">Sync Banzuke</h2>
-        <form method="POST" action="/api/sync-banzuke">
-          <div class="mt-4">
-            <label class="block text-sm">Tournament ID (YYYYMM)</label>
-            <input
-              type="text"
-              name="basho_id"
-              placeholder="202605"
-              class="border p-2 rounded w-full"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            class="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            Fetch and Populate
-          </button>
-        </form>
-      </section>
-    </div>
-  );
 }

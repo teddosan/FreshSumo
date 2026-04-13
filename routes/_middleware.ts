@@ -8,7 +8,6 @@ export async function handler(req: Request, ctx: any) {
   const watchedDayNum = watchedDay ? parseInt(watchedDay) : 0;
 
   const user = sessionId ? getUserFromSession(sessionId) : null;
-  console.log(user);
 
   ctx.state.user = user;
   ctx.state.isAdmin = user?.isAdmin || false;

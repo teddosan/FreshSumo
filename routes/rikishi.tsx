@@ -22,7 +22,7 @@ export const handler: Handlers<Data> = {
         name TEXT PRIMARY KEY,
         rank TEXT,
         stable TEXT,
-        owner TEXT DEFAULT 'Unassigned'
+        owner TEXT DEFAULT null
       )
     `);
 

@@ -12,6 +12,7 @@ import * as $api_login from "./routes/api/login.ts";
 import * as $api_logout from "./routes/api/logout.ts";
 import * as $api_register from "./routes/api/register.ts";
 import * as $api_release from "./routes/api/release.ts";
+import * as $api_sync_banzuke from "./routes/api/sync-banzuke.ts";
 import * as $index from "./routes/index.tsx";
 import * as $login from "./routes/login.tsx";
 import * as $reg_complete from "./routes/reg_complete.tsx";
@@ -37,6 +38,7 @@ const manifest = {
     "./routes/api/logout.ts": $api_logout,
     "./routes/api/register.ts": $api_register,
     "./routes/api/release.ts": $api_release,
+    "./routes/api/sync-banzuke.ts": $api_sync_banzuke,
     "./routes/index.tsx": $index,
     "./routes/login.tsx": $login,
     "./routes/reg_complete.tsx": $reg_complete,
