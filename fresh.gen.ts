@@ -14,6 +14,7 @@ import * as $api_register from "./routes/api/register.ts";
 import * as $api_release from "./routes/api/release.ts";
 import * as $index from "./routes/index.tsx";
 import * as $login from "./routes/login.tsx";
+import * as $reg_complete from "./routes/reg_complete.tsx";
 import * as $register from "./routes/register.tsx";
 import * as $rikishi from "./routes/rikishi.tsx";
 import * as $stable from "./routes/stable.tsx";
@@ -38,6 +39,7 @@ const manifest = {
     "./routes/api/release.ts": $api_release,
     "./routes/index.tsx": $index,
     "./routes/login.tsx": $login,
+    "./routes/reg_complete.tsx": $reg_complete,
     "./routes/register.tsx": $register,
     "./routes/rikishi.tsx": $rikishi,
     "./routes/stable.tsx": $stable,

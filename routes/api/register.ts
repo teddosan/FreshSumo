@@ -2,7 +2,11 @@ import { Handlers } from "$fresh/server.ts";
 import { setCookie } from "$std/http/cookie.ts";
 import bcrypt from "bcrypt";
 
-import { createUser, getUserByUsername } from "../../utils/auth_db.ts";
+import {
+  approveUserRegistration,
+  createUser,
+  getUserByUsername,
+} from "../../utils/auth_db.ts";
 import { createSession } from "../../utils/auth.ts";
 
 export const handler: Handlers = {
@@ -19,6 +23,8 @@ export const handler: Handlers = {
     const form = await req.formData();
 
     const username = form.get("username")?.toString().trim() || "";
+    const fullname = form.get("full_name")?.toString().trim() || "";
+    const email = form.get("email")?.toString().trim() || "";
     const password = form.get("password")?.toString() || "";
 
     // Basic validation
@@ -42,23 +48,17 @@ export const handler: Handlers = {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Create user
-    const user = createUser(username, passwordHash);
+    // Approve user
+    const user = approveUserRegistration(
+      username,
+      email,
+      fullname,
+      passwordHash,
+    );
 
-    // Create session (auto-login)
-    const sessionId = createSession(user.id);
-
-    const headers = new Headers();
-
-    setCookie(headers, {
-      name: "session",
-      value: sessionId,
-      httpOnly: true,
-      path: "/",
-      sameSite: "Lax",
+    return new Response(null, {
+      status: 303,
+      headers: { Location: "/reg_complete" },
     });
-
-    headers.set("Location", "/");
-    return new Response(null, { status: 303, headers });
   },
 };
