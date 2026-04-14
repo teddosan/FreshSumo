@@ -3,15 +3,16 @@ import { Handlers } from "$fresh/server.ts";
 
 async function handleSync(_req: Request) {
   const db = new DB("sumo.db");
-  const formData = _req.formData();
-  const bashoId = formData.get("basho_id")?.toString();
-
+  const body = await _req.json();
+  const bashoId = body.basho_id;
+  console.log("Received Sync Request for Basho ID:", bashoId);
   if (!bashoId) return new Response("Missing Tournament ID", { status: 400 });
-
+  console.log("Fetching Banzuke Data for Basho ID:", bashoId);
   try {
     // 1. Fetch from the Sumo API (using your existing fetch logic)
-    const response = await fetch(`https://sumo-api.com/api/banzuke/${bashoId}`);
+    const response = await fetch(`https://sumo-api.com/api/basho/${bashoId}/banzuke/makuuchi`);
     const data = await response.json();
+    console.log("Fetched Banzuke Data:", data);
     if (!data || !data.rikishi) {
       return new Response("Invalid API Response", { status: 500 });
     }
@@ -54,7 +55,7 @@ async function handleSync(_req: Request) {
     // Redirect back to admin with success
     return new Response(null, {
       status: 303,
-      headers: { Location: "/admin?success=true" },
+      headers: { Location: "/admin" },
     });
   } catch (err) {
     console.error(err);
@@ -69,4 +70,17 @@ async function handleTestHook(_req: Request) {
     status: 303,
     headers: { "Location": "/admin" },
   });
+}
+
+// ✅ Explicitly handle POST
+export const handler: Handlers = {
+  async POST(req) {
+    console.log("Received POST request to /api/sync-banzuke");
+    return await handleSync(req);
+    
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" }
+    });
+  },
 }
