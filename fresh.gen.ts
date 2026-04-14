@@ -20,6 +20,7 @@ import * as $register from "./routes/register.tsx";
 import * as $rikishi from "./routes/rikishi.tsx";
 import * as $stable from "./routes/stable.tsx";
 import * as $test_page from "./routes/test_page.tsx";
+import * as $BanzukeSync from "./islands/BanzukeSync.tsx";
 import * as $DraftTool from "./islands/DraftTool.tsx";
 import * as $ReleaseButton from "./islands/ReleaseButton.tsx";
 import * as $SpoilerShield from "./islands/SpoilerShield.tsx";
@@ -48,6 +49,7 @@ const manifest = {
     "./routes/test_page.tsx": $test_page,
   },
   islands: {
+    "./islands/BanzukeSync.tsx": $BanzukeSync,
     "./islands/DraftTool.tsx": $DraftTool,
     "./islands/ReleaseButton.tsx": $ReleaseButton,
     "./islands/SpoilerShield.tsx": $SpoilerShield,

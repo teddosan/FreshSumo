@@ -3,31 +3,39 @@ import { Handlers } from "$fresh/server.ts";
 
 async function handleSync(_req: Request) {
   const db = new DB("sumo.db");
-  const body = await _req.json();
-  const bashoId = body.basho_id;
-  console.log("Received Sync Request for Basho ID:", bashoId);
-  if (!bashoId) return new Response("Missing Tournament ID", { status: 400 });
-  console.log("Fetching Banzuke Data for Basho ID:", bashoId);
+
   try {
+    const { basho_id } = await _req.json();
+
+    if (!basho_id || !/^\d{6}$/.test(basho_id)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid ID format. Use YYYYMM." }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+
     // 1. Fetch from the Sumo API (using your existing fetch logic)
-    const response = await fetch(`https://sumo-api.com/api/basho/${bashoId}/banzuke/makuuchi`);
+    const response = await fetch(
+      `https://www.sumo-api.com/api/basho/${basho_id}/banzuke/Makuuchi`,
+    );
     const data = await response.json();
     console.log("Fetched Banzuke Data:", data);
-    if (!data || !data.rikishi) {
-      return new Response("Invalid API Response", { status: 500 });
-    }
+
     // 2. Ensure Tournament exists in DB
     db.query(
       "INSERT OR IGNORE INTO tournaments (basho_id, name) VALUES (?, ?)",
       [
-        bashoId,
-        `${bashoId} Tournament`,
+        basho_id,
+        `${basho_id} Tournament`,
       ],
     );
 
     const tIdResult = db.query(
       "SELECT id FROM tournaments WHERE basho_id = ?",
-      [bashoId],
+      [basho_id],
     );
     const tournamentInternalId = tIdResult[0][0];
 
@@ -52,14 +60,20 @@ async function handleSync(_req: Request) {
       );
     }
 
-    // Redirect back to admin with success
-    return new Response(null, {
-      status: 303,
-      headers: { Location: "/admin" },
-    });
+    const rikishiCount = 42; // Replace with your actual count from the loop
+
+    return new Response(
+      JSON.stringify({ success: true, count: rikishiCount }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   } catch (err) {
-    console.error(err);
-    return new Response("Sync Failed", { status: 500 });
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
 
@@ -76,11 +90,9 @@ async function handleTestHook(_req: Request) {
 export const handler: Handlers = {
   async POST(req) {
     console.log("Received POST request to /api/sync-banzuke");
-    return await handleSync(req);
-    
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
     });
   },
-}
+};

@@ -1,67 +1,7 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
 import { useComputed } from "@preact/signals";
-
-async function handleSync(_req: Request) {
-  const db = new DB("sumo.db");
-  const formData = await _req.formData();
-  const bashoId = formData.get("basho_id")?.toString();
-
-  if (!bashoId) return new Response("Missing Tournament ID", { status: 400 });
-
-  try {
-    // 1. Fetch from the Sumo API (using your existing fetch logic)
-    const response = await fetch(`https://sumo-api.com/api/banzuke/${bashoId}`);
-    const data = await response.json();
-    if (!data || !data.rikishi) {
-      return new Response("Invalid API Response", { status: 500 });
-    }
-    // 2. Ensure Tournament exists in DB
-    db.query(
-      "INSERT OR IGNORE INTO tournaments (basho_id, name) VALUES (?, ?)",
-      [
-        bashoId,
-        `${bashoId} Tournament`,
-      ],
-    );
-
-    const tIdResult = db.query(
-      "SELECT id FROM tournaments WHERE basho_id = ?",
-      [bashoId],
-    );
-    const tournamentInternalId = tIdResult[0][0];
-
-    // 3. Populate Wrestlers and Banzuke
-    for (const entry of data.rikishi) {
-      // Update/Insert Wrestler
-      db.query(
-        "INSERT OR IGNORE INTO wrestlers (shikona, current_heya) VALUES (?, ?)",
-        [entry.shikona, entry.heya],
-      );
-
-      const wIdResult = db.query("SELECT id FROM wrestlers WHERE shikona = ?", [
-        entry.shikona,
-      ]);
-      const wrestlerId = wIdResult[0][0];
-
-      // Create the Banzuke link
-      db.query(
-        `INSERT OR REPLACE INTO banzuke (tournament_id, wrestler_id, rank, side) 
-          VALUES (?, ?, ?, ?)`,
-        [tournamentInternalId, wrestlerId, entry.rank, entry.side],
-      );
-    }
-
-    // Redirect back to admin with success
-    return new Response(null, {
-      status: 303,
-      headers: { Location: "/admin?success=true" },
-    });
-  } catch (err) {
-    console.error(err);
-    return new Response("Sync Failed", { status: 500 });
-  }
-}
+import BanzukeSync from "../islands/BanzukeSync.tsx";
 
 async function handleTestHook(_req: Request) {
   // This is just a placeholder to show how you can add more admin actions
@@ -102,7 +42,7 @@ export const handler: Handlers = {
         await fetch(`${url.origin}/api/sync-banzuke`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ basho_id }) // Pass the ID to the API
+          body: JSON.stringify({ basho_id }), // Pass the ID to the API
         });
 
         // Redirect back to admin so the user sees the dashboard again
@@ -130,21 +70,31 @@ export const handler: Handlers = {
 
 export default function AdminPage() {
   return (
-    <div class="p-4">
-      <h1 class="text-2xl font-bold">Sumo Admin</h1>
+    <div class="p-4 max-w-2xl mx-auto">
+      <h1 class="text-3xl font-bold mb-6">Sumo Admin</h1>
 
-      <section class="mt-8 border p-4 rounded">
-        <h2 class="text-xl font-semibold">Sync Banzuke</h2>
-        <form method="POST"> {/* Submits to the same page */}
-        <input type="hidden" name="action" value="sync_banzuke" />
-        <div class="mt-4">
-          <label class="block text-sm">Tournament ID (YYYYMM)</label>
-          <input type="text" name="basho_id" required class="border p-2 rounded w-full" />
+      {/* The Island handles the form, fetch, and error/success states */}
+      <section class="mt-8">
+        <BanzukeSync />
+      </section>
+
+      {/* You can add other admin sections below as needed */}
+      <section class="mt-8 border-t pt-8">
+        <h2 class="text-xl font-semibold mb-4 text-gray-600">Other Tools</h2>
+        <div class="grid grid-cols-2 gap-4">
+          <a
+            href="/admin/users"
+            class="block p-4 border rounded hover:bg-gray-50"
+          >
+            Manage League Users
+          </a>
+          <a
+            href="/admin/draft-reset"
+            class="block p-4 border rounded hover:bg-gray-50"
+          >
+            Reset Draft Orders
+          </a>
         </div>
-        <button type="submit" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">
-          Fetch and Populate
-        </button>
-      </form>
       </section>
     </div>
   );
