@@ -1,7 +1,8 @@
 import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
 import { Resend } from "resend";
 
-const resend = new Resend("re_YiKwnaRd_MxLHshXWGFkDgdGxLqAGWd9f");
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const resend = new Resend(RESEND_API_KEY!);
 // Open DB
 export const db = new DB("app.db");
 
