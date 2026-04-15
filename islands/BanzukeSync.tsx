@@ -15,9 +15,16 @@ export default function BanzukeSync() {
     status.value = { type: "loading", msg: "Fetching from Sumo API..." };
 
     try {
+      if (!bashoId || !/^\d{6}$/.test(bashoId)) {
+        status.value = {
+          type: "error",
+          msg: "Invalid ID format. Use YYYYMM.",
+        };
+        return;
+      }
       const response = await fetch("/api/sync-banzuke", {
         method: "POST",
-        body: JSON.stringify({ basho_id: bashoId.value }),
+        body: JSON.stringify({ bashoId: bashoId.value }),
         headers: { "Content-Type": "application/json" },
       });
 

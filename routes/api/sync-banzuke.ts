@@ -5,75 +5,67 @@ async function handleSync(_req: Request) {
   const db = new DB("sumo.db");
 
   try {
-    const { basho_id } = await _req.json();
-
-    if (!basho_id || !/^\d{6}$/.test(basho_id)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid ID format. Use YYYYMM." }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-    }
+    const { bashoId } = await _req.json();
 
     // 1. Fetch from the Sumo API (using your existing fetch logic)
     const response = await fetch(
-      `https://www.sumo-api.com/api/basho/${basho_id}/banzuke/Makuuchi`,
+      `https://www.sumo-api.com/api/basho/${bashoId}/banzuke/Makuuchi`,
     );
     const data = await response.json();
-    console.log("Fetched Banzuke Data:", data);
+    console.log("Fetched Banzuke Data");
 
     // 2. Ensure Tournament exists in DB
     db.query(
       "INSERT OR IGNORE INTO tournaments (basho_id, name) VALUES (?, ?)",
       [
-        basho_id,
-        `${basho_id} Tournament`,
+        bashoId,
+        `${bashoId} Tournament`,
       ],
     );
 
     const tIdResult = db.query(
       "SELECT id FROM tournaments WHERE basho_id = ?",
-      [basho_id],
+      [bashoId],
     );
-    const tournamentInternalId = tIdResult[0][0];
-
+    const tournamentInternalId = tIdResult.length > 0 ? tIdResult[0][0] : null;
     // 3. Populate Wrestlers and Banzuke
-    for (const entry of data.rikishi) {
-      // Update/Insert Wrestler
+    // 3. Combine East and West rikishi into one list to process
+    const allRikishi = [...(data.east || []), ...(data.west || [])];
+
+    if (allRikishi.length === 0) {
+      throw new Error("No rikishi data found for this Basho ID.");
+    }
+
+    for (const entry of allRikishi) {
+      // Insert/Update Wrestler (using shikonaEn as the name)
       db.query(
-        "INSERT OR IGNORE INTO wrestlers (shikona, current_heya) VALUES (?, ?)",
-        [entry.shikona, entry.heya],
+        "INSERT OR IGNORE INTO wrestlers (shikonaEn, shikonaJp) VALUES (?, ?)",
+        [entry.shikonaEn, entry.shikonaJp],
       );
 
-      const wIdResult = db.query("SELECT id FROM wrestlers WHERE shikona = ?", [
-        entry.shikona,
-      ]);
+      const wIdResult = db.query(
+        "SELECT id FROM wrestlers WHERE shikonaEn = ?",
+        [
+          entry.shikonaEn,
+        ],
+      );
       const wrestlerId = wIdResult[0][0];
 
       // Create the Banzuke link
       db.query(
         `INSERT OR REPLACE INTO banzuke (tournament_id, wrestler_id, rank, side) 
-          VALUES (?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?)`,
         [tournamentInternalId, wrestlerId, entry.rank, entry.side],
       );
     }
 
-    const rikishiCount = 42; // Replace with your actual count from the loop
+    return { count: allRikishi.length };
 
-    return new Response(
-      JSON.stringify({ success: true, count: rikishiCount }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    const rikishiCount = data.rikishi.length;
+
+    return { count: rikishiCount };
+  } finally {
+    db.close();
   }
 }
 
@@ -90,9 +82,36 @@ async function handleTestHook(_req: Request) {
 export const handler: Handlers = {
   async POST(req) {
     console.log("Received POST request to /api/sync-banzuke");
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+
+    try {
+      // Execute the sync logic
+      // Assuming handleSync(req) handles the db inserts and returns a summary
+      const result = await handleSync(req);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          count: result.count,
+          message: "Banzuke updated successfully",
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    } catch (err) {
+      console.error("Sync Error:", err);
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: err.message || "Internal Server Error",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
   },
 };
