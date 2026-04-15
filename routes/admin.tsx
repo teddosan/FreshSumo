@@ -2,6 +2,7 @@ import { Handlers, PageProps } from "$fresh/server.ts";
 import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
 import { useComputed } from "@preact/signals";
 import BanzukeSync from "../islands/BanzukeSync.tsx";
+import AdminTools from "../islands/AdminTools.tsx";
 
 async function handleTestHook(_req: Request) {
   // This is just a placeholder to show how you can add more admin actions
@@ -26,44 +27,90 @@ export const handler: Handlers = {
     return ctx.render();
   },
 
+  // routes/admin/index.tsx
+
   async POST(req, _ctx) {
-    // 1. Extract the form data from the request body
-    const formData = await req.formData();
-    const action = formData.get("action");
+    // 1. Detect Content-Type to handle both Islands (JSON) and Forms (FormData)
+    const contentType = req.headers.get("content-type") || "";
+    let action: string | null;
+    let data: any;
+
+    if (contentType.includes("application/json")) {
+      data = await req.json();
+      action = data.action;
+    } else {
+      const formData = await req.formData();
+      data = Object.fromEntries(formData.entries());
+      action = data.action;
+    }
 
     // 2. Route the action
     switch (action) {
       case "sync_banzuke": {
-        console.log("Received Sync Banzuke Request");
-        const basho_id = formData.get("basho_id");
+        const basho_id = data.basho_id;
         const url = new URL(req.url);
 
-        // Use the server to call the API
         await fetch(`${url.origin}/api/sync-banzuke`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ basho_id }), // Pass the ID to the API
+          body: JSON.stringify({ basho_id }),
         });
-
-        // Redirect back to admin so the user sees the dashboard again
-        return new Response(null, {
-          status: 303,
-          headers: { "Location": "/admin" },
-        });
+        break;
       }
 
-      case "test_hook":
-        return await handleTestHook(req);
+      case "database_reinit": {
+        const db = new DB("sumo.db");
+        // Use the refactored schema we discussed to keep your results and banzuke separated!
+        db.execute(`
+        DROP TABLE IF EXISTS results;
+        DROP TABLE IF EXISTS banzuke;
+        DROP TABLE IF EXISTS tournaments;
+        DROP TABLE IF EXISTS wrestlers;
+        CREATE TABLE tournaments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          basho_id INTEGER NOT NULL,
+          start_date TEXT NOT NULL,
+          end_date TEXT NOT NULL
+        );
+        CREATE TABLE wrestlers (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          shikonaEn TEXT NOT NULL,
+          shikonaJp TEXT NOT NULL
+        );
+        CREATE TABLE banzuke (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          basho_id INTEGER NOT NULL,
+          wrestler_id INTEGER NOT NULL,
+          rank TEXT NOT NULL
+        );
+        CREATE TABLE results (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          basho_id INTEGER NOT NULL,
+          wrestler_id INTEGER NOT NULL,
+          wins INTEGER NOT NULL,
+          losses INTEGER NOT NULL
+        );  
+        `);
+        db.close();
+        break;
+      }
 
-      case "delete_user":
-        return await handleDeleteUser(req);
+        // ... [Other cases: reset_draft, delete_user, etc.] ...
+    }
 
-      default:
-        // If someone sends a weird action, just send them back
-        return new Response("", {
-          status: 303,
-          headers: { "Location": "/admin" },
-        });
+    // 3. Return the right response type
+    if (contentType.includes("application/json")) {
+      return new Response(
+        JSON.stringify({ success: true, message: `${action} completed` }),
+        {
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    } else {
+      return new Response(null, {
+        status: 303,
+        headers: { "Location": "/admin" },
+      });
     }
   },
 };
@@ -73,28 +120,12 @@ export default function AdminPage() {
     <div class="p-4 max-w-2xl mx-auto">
       <h1 class="text-3xl font-bold mb-6">Sumo Admin</h1>
 
-      {/* The Island handles the form, fetch, and error/success states */}
       <section class="mt-8">
         <BanzukeSync />
       </section>
 
-      {/* You can add other admin sections below as needed */}
-      <section class="mt-8 border-t pt-8">
-        <h2 class="text-xl font-semibold mb-4 text-gray-600">Other Tools</h2>
-        <div class="grid grid-cols-2 gap-4">
-          <a
-            href="/admin/users"
-            class="block p-4 border rounded hover:bg-gray-50"
-          >
-            Manage League Users
-          </a>
-          <a
-            href="/admin/draft-reset"
-            class="block p-4 border rounded hover:bg-gray-50"
-          >
-            Reset Draft Orders
-          </a>
-        </div>
+      <section class="mt-8">
+        <AdminTools />
       </section>
     </div>
   );
