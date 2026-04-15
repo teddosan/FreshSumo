@@ -69,8 +69,8 @@ export const handler: Handlers = {
         CREATE TABLE tournaments (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           basho_id INTEGER NOT NULL,
-          start_date TEXT NOT NULL,
-          end_date TEXT NOT NULL
+          start_date TEXT,
+          end_date TEXT
         );
         CREATE TABLE wrestlers (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -81,7 +81,8 @@ export const handler: Handlers = {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           basho_id INTEGER NOT NULL,
           wrestler_id INTEGER NOT NULL,
-          rank TEXT NOT NULL
+          rank TEXT NOT NULL,
+          owner TEXT
         );
         CREATE TABLE results (
           id INTEGER PRIMARY KEY AUTOINCREMENT,

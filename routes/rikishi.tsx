@@ -16,35 +16,32 @@ export const handler: Handlers<Data> = {
   GET(_req, ctx) {
     const db = new DB("sumo.db");
 
-    // 1. CRITICAL: Ensure the table exists BEFORE we query it
-    db.execute(`
-      CREATE TABLE IF NOT EXISTS wrestlers (
-        name TEXT PRIMARY KEY,
-        rank TEXT,
-        stable TEXT,
-        owner TEXT DEFAULT null
-      )
-    `);
-
-    // 2. Now the query will never fail with "no such table"
     const rows = db.query(`
-      SELECT name, rank, stable, owner 
-      FROM wrestlers 
-      ORDER BY 
-        CASE 
-          WHEN rank LIKE 'Y%' THEN 1
-          WHEN rank LIKE 'O%' THEN 2
-          WHEN rank LIKE 'S%' THEN 3
-          WHEN rank LIKE 'K%' THEN 4
-          WHEN rank LIKE 'M%' THEN 5
-          ELSE 6
-        END, rank ASC
-    `);
+  SELECT 
+    w.shikonaEn, 
+    w.shikonaJp, 
+    b.rank, 
+    b.owner
+  FROM wrestlers w
+  JOIN banzuke b ON w.id = b.wrestler_id
+  ORDER BY 
+    CASE 
+      WHEN b.rank LIKE 'Y%' THEN 1
+      WHEN b.rank LIKE 'O%' THEN 2
+      WHEN b.rank LIKE 'S%' THEN 3
+      WHEN b.rank LIKE 'K%' THEN 4
+      WHEN b.rank LIKE 'M%' THEN 5
+      ELSE 6
+    END,
+    -- This handles the numerical part of the rank (e.g., M1 vs M10)
+    CAST(SUBSTR(b.rank, 2) AS INTEGER) ASC,
+    b.rank ASC
+`);
 
-    const roster: Rikishi[] = rows.map(([name, rank, stable, owner]) => ({
+    const roster: Rikishi[] = rows.map(([name, kanji, rank, owner]) => ({
       name: name as string,
       rank: rank as string,
-      stable: stable as string,
+      kanji: kanji as string,
       owner: owner as string,
     }));
 
@@ -77,8 +74,8 @@ export default function RikishiPage({ data }: PageProps<Data>) {
                     <span class="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-1 rounded">
                       {r.rank}
                     </span>
-                    <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
-                      {r.stable}
+                    <span class="text-[20px] font-bold text-indigo-400 uppercase tracking-widest">
+                      {r.kanji}
                     </span>
                   </div>
                   <h2 class="text-2xl font-bold text-slate-800 mt-2">

@@ -16,10 +16,9 @@ async function handleSync(_req: Request) {
 
     // 2. Ensure Tournament exists in DB
     db.query(
-      "INSERT OR IGNORE INTO tournaments (basho_id, name) VALUES (?, ?)",
+      "INSERT OR IGNORE INTO tournaments (basho_id) VALUES (?)",
       [
         bashoId,
-        `${bashoId} Tournament`,
       ],
     );
 
@@ -28,8 +27,7 @@ async function handleSync(_req: Request) {
       [bashoId],
     );
     const tournamentInternalId = tIdResult.length > 0 ? tIdResult[0][0] : null;
-    // 3. Populate Wrestlers and Banzuke
-    // 3. Combine East and West rikishi into one list to process
+
     const allRikishi = [...(data.east || []), ...(data.west || [])];
 
     if (allRikishi.length === 0) {
@@ -53,9 +51,9 @@ async function handleSync(_req: Request) {
 
       // Create the Banzuke link
       db.query(
-        `INSERT OR REPLACE INTO banzuke (tournament_id, wrestler_id, rank, side) 
-     VALUES (?, ?, ?, ?)`,
-        [tournamentInternalId, wrestlerId, entry.rank, entry.side],
+        `INSERT OR REPLACE INTO banzuke (basho_id, wrestler_id, rank) 
+     VALUES (?, ?, ?)`,
+        [tournamentInternalId, wrestlerId, entry.rank],
       );
     }
 
