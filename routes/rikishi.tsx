@@ -19,7 +19,18 @@ export const handler: Handlers<Data> = {
     const rows = db.query(`
   SELECT 
     w.shikonaEn, 
-    w.shikonaJp, 
+    -- 1. Replace wide spaces with standard spaces
+    -- 2. Find the index of that space
+    -- 3. Slice the string up to that index
+    CASE 
+      WHEN INSTR(REPLACE(w.shikonaJp, '　', ' '), ' ') > 0 
+      THEN SUBSTR(
+             w.shikonaJp, 
+             1, 
+             INSTR(REPLACE(w.shikonaJp, '　', ' '), ' ') - 1
+           )
+      ELSE w.shikonaJp 
+    END AS shikonaJp_last,
     b.rank, 
     b.owner
   FROM wrestlers w
@@ -33,7 +44,6 @@ export const handler: Handlers<Data> = {
       WHEN b.rank LIKE 'M%' THEN 5
       ELSE 6
     END,
-    -- This handles the numerical part of the rank (e.g., M1 vs M10)
     CAST(SUBSTR(b.rank, 2) AS INTEGER) ASC,
     b.rank ASC
 `);
@@ -74,7 +84,7 @@ export default function RikishiPage({ data }: PageProps<Data>) {
                     <span class="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-1 rounded">
                       {r.rank}
                     </span>
-                    <span class="text-[20px] font-bold text-indigo-400 uppercase tracking-widest">
+                    <span class="text-[25px] font-bold text-indigo-600 uppercase tracking-widest">
                       {r.kanji}
                     </span>
                   </div>
