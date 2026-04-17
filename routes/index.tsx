@@ -23,19 +23,22 @@ export const handler: Handlers<Data> = {
       | null;
     const isAllowed = !!user;
 
-    // This needs to be refactored for new database structure
-    //-----------------------------------------------------------------
     const rows = db.query(`
       SELECT 
-        w.owner, 
-        COUNT(CASE WHEN r.result = 'win' THEN 1 END) as wins,
-        COUNT(r.result) as total
-      FROM daily_results r
-      JOIN wrestlers w ON r.rikishi_name = w.name
+        b.owner, 
+      COUNT(CASE WHEN r.winner_id = b.wrestler_id THEN 1 END) as wins,
+      COUNT(*) as total,
+      ROUND(
+        CAST(COUNT(CASE WHEN r.winner_id = b.wrestler_id THEN 1 END) AS FLOAT) / COUNT(*) * 100, 
+        2
+      ) || '%' as win_rate
+      FROM results r
+      -- We join banzuke on either side of the match
+      JOIN banzuke b ON (r.east_id = b.wrestler_id OR r.west_id = b.wrestler_id)
       WHERE r.basho_id = '202603'
-      AND w.owner IS NOT NULL
-      GROUP BY w.owner
-      ORDER BY wins DESC
+        AND b.owner IS NOT NULL
+      GROUP BY b.owner
+      ORDER BY wins DESC;
     `);
     // ----------------------------------------------------------------
     // New database code below

@@ -53,7 +53,7 @@ async function handleSync(_req: Request) {
       db.query(
         `INSERT OR REPLACE INTO banzuke (basho_id, wrestler_id, rank) 
      VALUES (?, ?, ?)`,
-        [tournamentInternalId, wrestlerId, entry.rank],
+        [bashoId, wrestlerId, entry.rank],
       );
     }
 

@@ -15,15 +15,23 @@ export const handler: Handlers<DraftData> = {
   GET(_req: Request, ctx) {
     const db = new DB("sumo.db");
 
-    // Fetch all wrestlers currently in the stable
-    // You can add "WHERE owner = 'Dad'" later to personalize it
     const rows = db.query(
-      "SELECT name, owner FROM wrestlers WHERE owner = ?",
+      `
+      SELECT 
+        w.shikonaEn, 
+        w.shikonaJp, 
+        b.owner 
+      FROM 
+        wrestlers w
+      JOIN banzuke b ON w.id = b.wrestler_id
+      WHERE b.owner = ?
+`,
       [ctx.state.user?.username],
     );
 
-    const myWrestlers = rows.map(([name, owner]: any) => ({
-      name,
+    const myWrestlers = rows.map(([shikonaEn, shikonaJp, owner]: any) => ({
+      shikonaEn,
+      shikonaJp,
       owner,
     }));
 
