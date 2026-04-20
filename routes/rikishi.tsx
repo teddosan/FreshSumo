@@ -1,5 +1,6 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
+import DraftButton from "../islands/DraftButton.tsx";
 
 interface Rikishi {
   name: string;
@@ -32,7 +33,8 @@ export const handler: Handlers<Data> = {
       ELSE w.shikonaJp 
     END AS shikonaJp_last,
     b.rank, 
-    b.owner
+    b.owner,
+    b.wrestler_id
   FROM wrestlers w
   JOIN banzuke b ON w.id = b.wrestler_id
   ORDER BY 
@@ -48,11 +50,14 @@ export const handler: Handlers<Data> = {
     b.rank ASC
 `);
 
-    const roster: Rikishi[] = rows.map(([name, kanji, rank, owner]) => ({
+    const roster: Rikishi[] = rows.map((
+      [name, kanji, rank, owner, wrestler_id],
+    ) => ({
       name: name as string,
       rank: rank as string,
       kanji: kanji as string,
       owner: owner as string,
+      wrestler_id: wrestler_id as number,
     }));
 
     db.close();
@@ -93,10 +98,10 @@ export default function RikishiPage({ data }: PageProps<Data>) {
                   </h2>
                   <div class="mt-4 pt-4 border-t border-dashed border-slate-100 flex justify-between items-center">
                     <span class="text-xs font-bold text-slate-400 uppercase">
-                      Owner
-                    </span>
-                    <span class="text-sm font-black text-indigo-600">
-                      {r.owner}
+                      <DraftButton
+                        wrestlerId={r.wrestler_id}
+                        initialOwner={r.owner}
+                      />
                     </span>
                   </div>
                 </div>
@@ -105,7 +110,7 @@ export default function RikishiPage({ data }: PageProps<Data>) {
             : (
               <div class="col-span-full py-20 text-center bg-slate-100 rounded-3xl border-2 border-dashed border-slate-200">
                 <p class="text-slate-400 font-bold">
-                  No wrestlers found in your stable.
+                  No wrestlers found.
                 </p>
               </div>
             )}
