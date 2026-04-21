@@ -2,12 +2,12 @@ import { context } from "https://deno.land/x/esbuild@v0.20.2/mod.d.ts";
 import { useState } from "preact/hooks";
 
 interface DraftProps {
-  wrestlerId: number;
+  rikishiId: number;
   initialOwner: string | null;
 }
 
 export default function DraftButton(
-  { wrestlerId, initialOwner, currentUser }: DraftProps,
+  { rikishiId, initialOwner, currentUser }: DraftProps,
 ) {
   const [owner, setOwner] = useState(initialOwner);
   const [loading, setLoading] = useState(false);
@@ -17,11 +17,11 @@ export default function DraftButton(
     // Fresh uses standard API routes for island-to-server communication
     const res = await fetch("/api/draft", {
       method: "POST",
-      body: JSON.stringify({ wrestlerId }),
+      body: JSON.stringify({ rikishiId }),
     });
 
     if (res.ok) {
-      console.log(`Successfully drafted wrestler ${wrestlerId}`);
+      console.log(`Successfully drafted wrestler ${rikishiId}`);
       setOwner(currentUser); // Update the owner to the current user
     } else {
       console.log("Resp: ", res);

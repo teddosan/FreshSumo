@@ -26,15 +26,15 @@ export const handler: Handlers<Data> = {
     const rows = db.query(`
       SELECT 
         b.owner, 
-      COUNT(CASE WHEN r.winner_id = b.wrestler_id THEN 1 END) as wins,
+      COUNT(CASE WHEN r.winner_id = b.rikishi_id THEN 1 END) as wins,
       COUNT(*) as total,
       ROUND(
-        CAST(COUNT(CASE WHEN r.winner_id = b.wrestler_id THEN 1 END) AS FLOAT) / COUNT(*) * 100, 
+        CAST(COUNT(CASE WHEN r.winner_id = b.rikishi_id THEN 1 END) AS FLOAT) / COUNT(*) * 100, 
         2
       ) || '%' as win_rate
       FROM results r
       -- We join banzuke on either side of the match
-      JOIN banzuke b ON (r.east_id = b.wrestler_id OR r.west_id = b.wrestler_id)
+      JOIN banzuke b ON (r.east_id = b.rikishi_id OR r.west_id = b.rikishi_id)
       WHERE r.basho_id = 202603
         AND b.owner IS NOT NULL
       GROUP BY b.owner

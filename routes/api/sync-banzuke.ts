@@ -22,12 +22,6 @@ async function handleSync(_req: Request) {
       ],
     );
 
-    const tIdResult = db.query(
-      "SELECT id FROM tournaments WHERE basho_id = ?",
-      [bashoId],
-    );
-    const tournamentInternalId = tIdResult.length > 0 ? tIdResult[0][0] : null;
-
     const allRikishi = [...(data.east || []), ...(data.west || [])];
 
     if (allRikishi.length === 0) {
@@ -37,31 +31,26 @@ async function handleSync(_req: Request) {
     for (const entry of allRikishi) {
       // Insert/Update Wrestler (using shikonaEn as the name)
       db.query(
-        "INSERT OR IGNORE INTO wrestlers (shikonaEn, shikonaJp) VALUES (?, ?)",
-        [entry.shikonaEn, entry.shikonaJp],
+        "INSERT OR IGNORE INTO wrestlers (rikishi_id, shikonaEn, shikonaJp) VALUES (?, ?, ?)",
+        [entry.rikishiID, entry.shikonaEn, entry.shikonaJp],
       );
 
       const wIdResult = db.query(
-        "SELECT id FROM wrestlers WHERE shikonaEn = ?",
+        "SELECT rikishi_id FROM wrestlers WHERE shikonaEn = ?",
         [
           entry.shikonaEn,
         ],
       );
-      const wrestlerId = wIdResult[0][0];
 
       // Create the Banzuke link
       db.query(
-        `INSERT OR REPLACE INTO banzuke (basho_id, wrestler_id, rank) 
+        `INSERT OR REPLACE INTO banzuke (basho_id, rikishi_id, rank) 
      VALUES (?, ?, ?)`,
-        [bashoId, wrestlerId, entry.rank],
+        [bashoId, entry.rikishiID, entry.rank],
       );
     }
 
     return { count: allRikishi.length };
-
-    const rikishiCount = data.rikishi.length;
-
-    return { count: rikishiCount };
   } finally {
     db.close();
   }

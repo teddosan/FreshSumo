@@ -3,12 +3,14 @@ import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
 import ReleaseButton from "../islands/ReleaseButton.tsx";
 
 interface Wrestler {
-  name: string;
+  shikonaEn: string;
+  shikonaJp: string;
   owner: string;
 }
 
 interface DraftData {
   myWrestlers: Wrestler[];
+  watchedDay: number;
 }
 
 export const handler: Handlers<DraftData> = {
@@ -23,7 +25,7 @@ export const handler: Handlers<DraftData> = {
         b.owner 
       FROM 
         wrestlers w
-      JOIN banzuke b ON w.id = b.wrestler_id
+      JOIN banzuke b ON w.rikishi_id = b.rikishi_id
       WHERE b.owner = ?
 `,
       [ctx.state.user?.username],
@@ -36,7 +38,8 @@ export const handler: Handlers<DraftData> = {
     }));
 
     db.close();
-    return ctx.render({ myWrestlers });
+    const watchedDay = ctx.state.watchedDay;
+    return ctx.render({ myWrestlers, watchedDay });
   },
 };
 
@@ -45,11 +48,12 @@ export default function StablePage({ data }: PageProps<DraftData>) {
     <div class="min-h-screen bg-slate-50 p-4 md:p-8">
       <div class="max-w-xl mx-auto">
         <header class="mb-8">
-          <a href="/" class="text-indigo-600 font-bold text-sm">
-            ← Back to Dashboard
-          </a>
-          <h1 class="text-3xl font-black text-slate-900 mt-2">Draft Room</h1>
-          <p class="text-slate-500">Manage your stable for the May Basho</p>
+          <h1 class="text-3xl font-black text-slate-900 mt-2">
+            Rikishi Stable
+          </h1>
+          <p class="text-slate-500">
+            Record for May basho up to day {data.watchedDay}
+          </p>
         </header>
 
         <div class="space-y-6">
@@ -64,10 +68,7 @@ export default function StablePage({ data }: PageProps<DraftData>) {
                     <div class="flex justify-between items-center p-4 bg-white rounded-xl shadow-sm border border-slate-100">
                       <div>
                         <span class="font-bold text-indigo-900 block">
-                          {w.name}
-                        </span>
-                        <span class="text-[10px] uppercase font-bold text-slate-400">
-                          Owner: {w.owner}
+                          {w.shikonaEn} ({w.shikonaJp})
                         </span>
                       </div>
                       <ReleaseButton name={w.name} />
@@ -81,20 +82,6 @@ export default function StablePage({ data }: PageProps<DraftData>) {
                 )}
             </div>
           </section>
-
-          {/* This is where you'll eventually add the "Search & Draft" island */}
-          <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
-            <h4 class="font-bold text-indigo-900 mb-1">Add New Rikishi</h4>
-            <p class="text-sm text-indigo-700 mb-4">
-              Search the banzuke to add to your team.
-            </p>
-            <button
-              disabled
-              class="w-full py-3 bg-indigo-200 text-indigo-400 font-bold rounded-lg cursor-not-allowed"
-            >
-              Search Coming Soon...
-            </button>
-          </div>
         </div>
       </div>
     </div>

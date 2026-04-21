@@ -11,12 +11,12 @@ export const handler: Handlers<any> = {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const { wrestlerId } = await req.json();
+    const { rikishiId } = await req.json();
 
     // Update the DB with the ACTUAL logged-in user
     db.query(
-      "UPDATE banzuke SET owner = ? WHERE wrestler_id = ? AND owner IS NULL",
-      [username, wrestlerId],
+      "UPDATE banzuke SET owner = ? WHERE rikishi_id = ? AND owner IS NULL",
+      [username, rikishiId],
     );
 
     return new Response(JSON.stringify({ success: true }));

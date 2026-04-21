@@ -8,7 +8,7 @@ interface Rikishi {
   rank: string;
   kanji: string;
   owner: string | null;
-  wrestler_id: number;
+  rikishi_id: number;
 }
 
 interface Data {
@@ -37,9 +37,9 @@ export const handler: Handlers<Data> = {
     END AS shikonaJp_last,
     b.rank, 
     b.owner,
-    b.wrestler_id
+    b.rikishi_id
   FROM wrestlers w
-  JOIN banzuke b ON w.id = b.wrestler_id
+  JOIN banzuke b ON w.rikishi_id = b.rikishi_id
   ORDER BY 
     CASE 
       WHEN b.rank LIKE 'Y%' THEN 1
@@ -54,13 +54,13 @@ export const handler: Handlers<Data> = {
 `);
 
     const roster: Rikishi[] = rows.map((
-      [name, kanji, rank, owner, wrestler_id],
+      [name, kanji, rank, owner, rikishi_id],
     ) => ({
       name: name as string,
       rank: rank as string,
       kanji: kanji as string,
       owner: owner as string,
-      wrestler_id: wrestler_id as number,
+      rikishi_id: rikishi_id as number,
     }));
 
     db.close();
@@ -102,7 +102,7 @@ export default function RikishiPage({ data }: PageProps<Data>) {
                   <div class="mt-4 pt-4 border-t border-dashed border-slate-100 flex justify-between items-center">
                     <span class="text-xs font-bold text-slate-400 uppercase">
                       <DraftButton
-                        wrestlerId={r.wrestler_id}
+                        rikishiId={r.rikishi_id}
                         initialOwner={r.owner}
                         currentUser={data.username}
                       />

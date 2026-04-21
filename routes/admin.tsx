@@ -68,25 +68,24 @@ export const handler: Handlers = {
         DROP TABLE IF EXISTS wrestlers;
       
         CREATE TABLE tournaments (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          basho_id INTEGER NOT NULL UNIQUE,
+          basho_id INTEGER PRIMARY KEY,
           start_date TEXT,
           end_date TEXT,
           location TEXT
         );
         CREATE TABLE wrestlers (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          rikishi_id INTEGER PRIMARY KEY,
           shikonaEn TEXT NOT NULL,
           shikonaJp TEXT NOT NULL
         );
         CREATE TABLE banzuke (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           basho_id INTEGER NOT NULL,
-          wrestler_id INTEGER NOT NULL,
+          rikishi_id INTEGER NOT NULL,
           rank TEXT NOT NULL,
           owner TEXT,
           FOREIGN KEY (basho_id) REFERENCES tournaments(basho_id),
-          FOREIGN KEY (wrestler_id) REFERENCES wrestlers(id)
+          FOREIGN KEY (rikishi_id) REFERENCES wrestlers(rikishi_id)
         );
         CREATE TABLE results (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
