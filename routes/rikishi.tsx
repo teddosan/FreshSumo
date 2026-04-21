@@ -1,22 +1,25 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
 import DraftButton from "../islands/DraftButton.tsx";
+import { context } from "https://deno.land/x/esbuild@v0.20.2/mod.d.ts";
 
 interface Rikishi {
   name: string;
   rank: string;
-  stable: string;
-  owner: string;
+  kanji: string;
+  owner: string | null;
+  wrestler_id: number;
 }
 
 interface Data {
   roster: Rikishi[];
+  username: string | null;
 }
 
 export const handler: Handlers<Data> = {
   GET(_req, ctx) {
     const db = new DB("sumo.db");
-
+    const username = ctx.state.user?.username || null;
     const rows = db.query(`
   SELECT 
     w.shikonaEn, 
@@ -61,7 +64,7 @@ export const handler: Handlers<Data> = {
     }));
 
     db.close();
-    return ctx.render({ roster });
+    return ctx.render({ roster, username });
   },
 };
 
@@ -101,6 +104,7 @@ export default function RikishiPage({ data }: PageProps<Data>) {
                       <DraftButton
                         wrestlerId={r.wrestler_id}
                         initialOwner={r.owner}
+                        currentUser={data.username}
                       />
                     </span>
                   </div>

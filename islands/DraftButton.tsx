@@ -1,3 +1,4 @@
+import { context } from "https://deno.land/x/esbuild@v0.20.2/mod.d.ts";
 import { useState } from "preact/hooks";
 
 interface DraftProps {
@@ -5,7 +6,9 @@ interface DraftProps {
   initialOwner: string | null;
 }
 
-export default function DraftButton({ wrestlerId, initialOwner }: DraftProps) {
+export default function DraftButton(
+  { wrestlerId, initialOwner, currentUser }: DraftProps,
+) {
   const [owner, setOwner] = useState(initialOwner);
   const [loading, setLoading] = useState(false);
 
@@ -18,9 +21,10 @@ export default function DraftButton({ wrestlerId, initialOwner }: DraftProps) {
     });
 
     if (res.ok) {
-      // For a quick hack, we assume current user,
-      // but ideally the API returns the new owner name
-      setOwner("You");
+      console.log(`Successfully drafted wrestler ${wrestlerId}`);
+      setOwner(currentUser); // Update the owner to the current user
+    } else {
+      console.log("Resp: ", res);
     }
     setLoading(false);
   };

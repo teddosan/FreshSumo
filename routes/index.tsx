@@ -35,25 +35,11 @@ export const handler: Handlers<Data> = {
       FROM results r
       -- We join banzuke on either side of the match
       JOIN banzuke b ON (r.east_id = b.wrestler_id OR r.west_id = b.wrestler_id)
-      WHERE r.basho_id = '202603'
+      WHERE r.basho_id = 202603
         AND b.owner IS NOT NULL
       GROUP BY b.owner
       ORDER BY wins DESC;
     `);
-    // ----------------------------------------------------------------
-    // New database code below
-    /*
-    SELECT
-      b.owner,
-      SUM(CASE WHEN r.result = 'win' THEN 1 ELSE 0 END) as wins,
-      -- Logic to calculate win rate based on matches played
-      CAST(SUM(CASE WHEN r.result = 'win' THEN 1 ELSE 0 END) AS FLOAT) / COUNT(r.id) as winRate
-    FROM banzuke b
-    JOIN results r ON b.rikishi_id = r.rikishi_id AND b.tournament_id = r.tournament_id
-    WHERE b.tournament_id = ? -- e.g., March 2026 ID
-    GROUP BY b.owner
-    ORDER BY wins DESC;
-    */
 
     const standingsRows = rows as unknown as Array<[string, number, number]>;
 
