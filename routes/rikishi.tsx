@@ -40,6 +40,7 @@ export const handler: Handlers<Data> = {
     b.rikishi_id
   FROM wrestlers w
   JOIN banzuke b ON w.rikishi_id = b.rikishi_id
+  WHERE b.basho_id = 202603
   ORDER BY 
     CASE 
       WHEN b.rank LIKE 'Y%' THEN 1

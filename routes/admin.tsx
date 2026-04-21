@@ -79,11 +79,11 @@ export const handler: Handlers = {
           shikonaJp TEXT NOT NULL
         );
         CREATE TABLE banzuke (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
           basho_id INTEGER NOT NULL,
           rikishi_id INTEGER NOT NULL,
           rank TEXT NOT NULL,
           owner TEXT,
+          PRIMARY KEY (basho_id, rikishi_id),
           FOREIGN KEY (basho_id) REFERENCES tournaments(basho_id),
           FOREIGN KEY (rikishi_id) REFERENCES wrestlers(rikishi_id)
         );
@@ -95,9 +95,9 @@ export const handler: Handlers = {
           east_id INTEGER NOT NULL,
           winner_id INTEGER NOT NULL,
           FOREIGN KEY (basho_id) REFERENCES tournaments(basho_id),
-          FOREIGN KEY (west_id) REFERENCES wrestlers(id),
-          FOREIGN KEY (east_id) REFERENCES wrestlers(id),
-          FOREIGN KEY (winner_id) REFERENCES wrestlers(id)
+          FOREIGN KEY (west_id) REFERENCES wrestlers(rikishi_id),
+          FOREIGN KEY (east_id) REFERENCES wrestlers(rikishi_id),
+          FOREIGN KEY (winner_id) REFERENCES wrestlers(rikishi_id)
         );  
         `);
         db.close();

@@ -7,7 +7,6 @@ async function handleSync(_req: Request) {
   try {
     const { bashoId } = await _req.json();
 
-    // 1. Fetch from the Sumo API (using your existing fetch logic)
     const response = await fetch(
       `https://www.sumo-api.com/api/basho/${bashoId}/banzuke/Makuuchi`,
     );
@@ -35,14 +34,6 @@ async function handleSync(_req: Request) {
         [entry.rikishiID, entry.shikonaEn, entry.shikonaJp],
       );
 
-      const wIdResult = db.query(
-        "SELECT rikishi_id FROM wrestlers WHERE shikonaEn = ?",
-        [
-          entry.shikonaEn,
-        ],
-      );
-
-      // Create the Banzuke link
       db.query(
         `INSERT OR REPLACE INTO banzuke (basho_id, rikishi_id, rank) 
      VALUES (?, ?, ?)`,
