@@ -102,8 +102,9 @@ export async function approveUserRegistration(
 ) {
   const id = crypto.randomUUID();
 
+  // Change below to pending_users for later production
   db.query(
-    "INSERT INTO pending_users (id, username, email, fullname, password_hash) VALUES (?, ?, ?, ?, ?)",
+    "INSERT INTO users (id, username, email, fullname, password_hash) VALUES (?, ?, ?, ?, ?)",
     [id, username, email, fullname, passwordHash],
   );
 

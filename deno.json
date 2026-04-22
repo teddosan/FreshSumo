@@ -27,5 +27,10 @@
     "$std/": "https://deno.land/std@0.216.0/"
   },
   "compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "preact" },
-  "nodeModulesDir": "auto"
+  "nodeModulesDir": "auto",
+  "deploy": {
+    "org": "teddosan",
+    "app": "fresh-sumo"
+  }
 }
+
