@@ -7,43 +7,54 @@ async function handleSync(_req: Request) {
   try {
     const { bashoId } = await _req.json();
 
-    const response = await fetch(
+    // 1. Fetch Makuuchi Banzuke
+    const mResponse = await fetch(
       `https://www.sumo-api.com/api/basho/${bashoId}/banzuke/Makuuchi`,
     );
-    const data = await response.json();
-    console.log("Fetched Banzuke Data");
+    const mData = await mResponse.json();
+
+    // 2. Fetch Juryo Banzuke
+    const jResponse = await fetch(
+      `https://www.sumo-api.com/api/basho/${bashoId}/banzuke/Juryo`,
+    );
+    const jData = await jResponse.json();
+    console.log("Fetched Makuuchi and Juryo Data");
+
+    // 3. Fetch Basho Dates
     const bResponse = await fetch(
       `https://www.sumo-api.com/api/basho/${bashoId}`,
     );
     const bData = await bResponse.json();
-    console.log("Fetched Basho Data");
 
-    // 2. Ensure Tournament exists in DB
+    // 4. Ensure Tournament exists
     db.query(
       "INSERT OR IGNORE INTO tournaments (basho_id, start_date, end_date) VALUES (?, ?, ?)",
-      [
-        bashoId,
-        bData.startDate,
-        bData.endDate,
-      ],
+      [bashoId, bData.startDate, bData.endDate],
     );
 
-    const allRikishi = [...(data.east || []), ...(data.west || [])];
+    // 5. Combine all rikishi from both divisions and both sides (East/West)
+    const allRikishi = [
+      ...(mData.east || []),
+      ...(mData.west || []),
+      ...(jData.east || []),
+      ...(jData.west || []),
+    ];
 
     if (allRikishi.length === 0) {
       throw new Error("No rikishi data found for this Basho ID.");
     }
 
+    // 6. Process the combined list
     for (const entry of allRikishi) {
-      // Insert/Update Wrestler (using shikonaEn as the name)
+      // Use INSERT OR REPLACE so shikona updates if they change their name
       db.query(
-        "INSERT OR IGNORE INTO wrestlers (rikishi_id, shikonaEn, shikonaJp) VALUES (?, ?, ?)",
+        "INSERT OR REPLACE INTO wrestlers (rikishi_id, shikonaEn, shikonaJp) VALUES (?, ?, ?)",
         [entry.rikishiID, entry.shikonaEn, entry.shikonaJp],
       );
 
       db.query(
         `INSERT OR REPLACE INTO banzuke (basho_id, rikishi_id, rank) 
-     VALUES (?, ?, ?)`,
+         VALUES (?, ?, ?)`,
         [bashoId, entry.rikishiID, entry.rank],
       );
     }

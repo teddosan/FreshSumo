@@ -20,23 +20,42 @@ async function handleSync(_req: Request) {
       throw new Error("No match data found for this Basho ID and day.");
     }
 
-    for (const entry of matches) {
-      db.query(
-        `
-        INSERT OR REPLACE INTO results (basho_id, day, east_id, west_id, winner_id, kimarite)
-        VALUES (?, ?, ?, ?, ?, ?)
-        `,
-        [
-          bashoId,
-          day,
-          entry.eastId,
-          entry.westId,
-          entry.winnerId,
-          entry.kimarite,
-        ],
-      );
-    }
+    try {
+      for (const entry of matches) {
+        console.log(
+          `Processing Match: East ${entry.eastId} vs West ${entry.westId}, Winner: ${entry.winnerId}, Kimarite: ${entry.kimarite}`,
+        );
+        db.query(
+          `
+          INSERT OR REPLACE INTO results (id, basho_id, day, east_id, west_id, winner_id, kimarite)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+          `,
+          [
+            entry.id,
+            bashoId,
+            day,
+            entry.eastId,
+            entry.westId,
+            entry.winnerId,
+            entry.kimarite,
+          ],
+        );
+      }
+    } catch (err) {
+      if (err.message.includes("FOREIGN KEY constraint failed")) {
+        // This looks for current violations in the whole DB
+        const violations = db.query("PRAGMA foreign_key_check(results)");
+        console.error("FK Violations found:", violations);
 
+        // Result format: [table_name, rowid, referenced_table, foreign_key_index]
+        violations.forEach((v) => {
+          console.log(
+            `Row ${v[1]} in results points to a missing record in ${v[2]}`,
+          );
+        });
+      }
+      throw err;
+    }
     return { count: matches.length };
   } finally {
     db.close();

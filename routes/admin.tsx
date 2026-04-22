@@ -89,7 +89,7 @@ export const handler: Handlers = {
           FOREIGN KEY (rikishi_id) REFERENCES wrestlers(rikishi_id)
         );
         CREATE TABLE results (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          id TEXT PRIMARY KEY,
           day INTEGER NOT NULL,
           basho_id INTEGER NOT NULL,
           west_id INTEGER NOT NULL,
