@@ -4,7 +4,7 @@ import { Resend } from "resend";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const resend = new Resend(RESEND_API_KEY!);
 // Open DB
-export const db = new DB("app.db");
+export const db = new DB("sumo.db");
 
 // Performance tweak
 db.execute(`PRAGMA journal_mode = WAL;`);
