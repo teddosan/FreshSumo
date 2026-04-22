@@ -3,9 +3,19 @@ import { Resend } from "resend";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const resend = new Resend(RESEND_API_KEY!);
-// Open DB
-export const db = new DB("sumo.db");
+export function runQuery(sql: string, params: any[] = []) {
+  const db = new DB("sumo.db");
+  db.execute("PRAGMA journal_mode = WAL;");
+  try {
+    return [...db.query(sql, params)];
+  } finally {
+    db.close();
+  }
+}
 
+// Open DB
+/*export const db = new DB("sumo.db");
+/*
 // Performance tweak
 db.execute(`PRAGMA journal_mode = WAL;`);
 
@@ -38,18 +48,21 @@ CREATE TABLE IF NOT EXISTS sessions (
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 `);
-
+*/
 // -------------------------
 // Helpers
 // -------------------------
 
 export function getUserByUsername(userName: string) {
+  const tempDb = new DB("sumo.db");
   const rows = [
-    ...db.query(
+    ...tempDb.query(
       "SELECT id, username, password_hash FROM users WHERE username = ?",
       [userName],
     ),
   ];
+
+  tempDb.close();
 
   if (rows.length === 0) return null;
 
@@ -63,13 +76,14 @@ export function getUserByUsername(userName: string) {
 }
 
 export function getUserById(id: string) {
+  const tempDb = new DB("sumo.db");
   const rows = [
-    ...db.query(
+    ...tempDb.query(
       "SELECT id, username FROM users WHERE id = ?",
       [id],
     ),
   ];
-
+  tempDb.close();
   if (rows.length === 0) return null;
 
   const [userId, username] = rows[0];
@@ -85,12 +99,13 @@ export function getUserById(id: string) {
 // Optional but VERY useful for registration
 export function createUser(username: string, passwordHash: string) {
   const id = crypto.randomUUID();
+  const tempDb = new DB("sumo.db");
 
-  db.query(
+  tempDb.query(
     "INSERT INTO users (id, username, password_hash) VALUES (?, ?, ?)",
     [id, username, passwordHash],
   );
-
+  tempDb.close();
   return { id, username };
 }
 
@@ -101,13 +116,14 @@ export async function approveUserRegistration(
   passwordHash: string,
 ) {
   const id = crypto.randomUUID();
+  const tempDb = new DB("sumo.db");
 
   // Change below to pending_users for later production
-  db.query(
+  tempDb.query(
     "INSERT INTO users (id, username, email, fullname, password_hash) VALUES (?, ?, ?, ?, ?)",
     [id, username, email, fullname, passwordHash],
   );
-
+  tempDb.close();
   await resend.emails.send({
     from: "Sumo App <onboarding@resend.dev>",
     to: "teddo3@gmail.com",

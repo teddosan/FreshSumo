@@ -1,4 +1,4 @@
-import { db, getUserById } from "./auth_db.ts";
+import { getUserById, runQuery } from "./auth_db.ts";
 
 const SESSION_DURATION = 1000 * 60 * 60 * 24 * 7; // 7 days
 
@@ -6,7 +6,7 @@ export function createSession(userId: string) {
   const sessionId = crypto.randomUUID();
   const expiresAt = Date.now() + SESSION_DURATION;
 
-  db.query(
+  runQuery(
     "INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)",
     [sessionId, userId, expiresAt],
   );
@@ -16,7 +16,7 @@ export function createSession(userId: string) {
 
 export function getUserFromSession(sessionId: string) {
   const rows = [
-    ...db.query(
+    ...runQuery(
       "SELECT user_id, expires_at FROM sessions WHERE id = ?",
       [sessionId],
     ),
@@ -28,7 +28,7 @@ export function getUserFromSession(sessionId: string) {
 
   if ((expires_at as number) < Date.now()) {
     // Optional: clean up expired session
-    db.query("DELETE FROM sessions WHERE id = ?", [sessionId]);
+    runQuery("DELETE FROM sessions WHERE id = ?", [sessionId]);
     return null;
   }
 
@@ -36,5 +36,5 @@ export function getUserFromSession(sessionId: string) {
 }
 
 export function deleteSession(sessionId: string) {
-  db.query("DELETE FROM sessions WHERE id = ?", [sessionId]);
+  runQuery("DELETE FROM sessions WHERE id = ?", [sessionId]);
 }
