@@ -12,12 +12,19 @@ async function handleSync(_req: Request) {
     );
     const data = await response.json();
     console.log("Fetched Banzuke Data");
+    const bResponse = await fetch(
+      `https://www.sumo-api.com/api/basho/${bashoId}`,
+    );
+    const bData = await bResponse.json();
+    console.log("Fetched Basho Data");
 
     // 2. Ensure Tournament exists in DB
     db.query(
-      "INSERT OR IGNORE INTO tournaments (basho_id) VALUES (?)",
+      "INSERT OR IGNORE INTO tournaments (basho_id, start_date, end_date) VALUES (?, ?, ?)",
       [
         bashoId,
+        bData.startDate,
+        bData.endDate,
       ],
     );
 

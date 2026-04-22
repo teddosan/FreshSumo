@@ -14,6 +14,7 @@ import * as $api_logout from "./routes/api/logout.ts";
 import * as $api_register from "./routes/api/register.ts";
 import * as $api_release from "./routes/api/release.ts";
 import * as $api_sync_banzuke from "./routes/api/sync-banzuke.ts";
+import * as $api_sync_results from "./routes/api/sync-results.ts";
 import * as $index from "./routes/index.tsx";
 import * as $login from "./routes/login.tsx";
 import * as $reg_complete from "./routes/reg_complete.tsx";
@@ -25,6 +26,7 @@ import * as $AdminTools from "./islands/AdminTools.tsx";
 import * as $BanzukeSync from "./islands/BanzukeSync.tsx";
 import * as $DraftButton from "./islands/DraftButton.tsx";
 import * as $ReleaseButton from "./islands/ReleaseButton.tsx";
+import * as $ResultsSync from "./islands/ResultsSync.tsx";
 import * as $SpoilerShield from "./islands/SpoilerShield.tsx";
 import * as $SyncButton from "./islands/SyncButton.tsx";
 import type { Manifest } from "$fresh/server.ts";
@@ -43,6 +45,7 @@ const manifest = {
     "./routes/api/register.ts": $api_register,
     "./routes/api/release.ts": $api_release,
     "./routes/api/sync-banzuke.ts": $api_sync_banzuke,
+    "./routes/api/sync-results.ts": $api_sync_results,
     "./routes/index.tsx": $index,
     "./routes/login.tsx": $login,
     "./routes/reg_complete.tsx": $reg_complete,
@@ -56,6 +59,7 @@ const manifest = {
     "./islands/BanzukeSync.tsx": $BanzukeSync,
     "./islands/DraftButton.tsx": $DraftButton,
     "./islands/ReleaseButton.tsx": $ReleaseButton,
+    "./islands/ResultsSync.tsx": $ResultsSync,
     "./islands/SpoilerShield.tsx": $SpoilerShield,
     "./islands/SyncButton.tsx": $SyncButton,
   },

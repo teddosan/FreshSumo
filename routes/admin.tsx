@@ -1,6 +1,7 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
 import { useComputed } from "@preact/signals";
+import ResultsSync from "../islands/ResultsSync.tsx";
 import BanzukeSync from "../islands/BanzukeSync.tsx";
 import AdminTools from "../islands/AdminTools.tsx";
 
@@ -94,6 +95,7 @@ export const handler: Handlers = {
           west_id INTEGER NOT NULL,
           east_id INTEGER NOT NULL,
           winner_id INTEGER NOT NULL,
+          kimarite TEXT,
           FOREIGN KEY (basho_id) REFERENCES tournaments(basho_id),
           FOREIGN KEY (west_id) REFERENCES wrestlers(rikishi_id),
           FOREIGN KEY (east_id) REFERENCES wrestlers(rikishi_id),
@@ -126,16 +128,33 @@ export const handler: Handlers = {
 
 export default function AdminPage() {
   return (
-    <div class="p-4 max-w-2xl mx-auto">
-      <h1 class="text-3xl font-bold mb-6">Sumo Admin</h1>
+    <div class="min-h-screen bg-slate-50 p-8">
+      <div class="max-w-6xl mx-auto">
+        <header class="mb-10">
+          <h1 class="text-4xl font-black tracking-tighter uppercase text-slate-900">
+            Sumo Admin <span class="text-indigo-600">Control Panel</span>
+          </h1>
+          <p class="text-slate-500 font-medium">
+            Manage Banzuke and Tournament Results
+          </p>
+        </header>
 
-      <section class="mt-8">
-        <BanzukeSync />
-      </section>
+        {/* The Two-Column Grid */}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Left Column: Results */}
+          <section>
+            <ResultsSync />
+            <div class="mt-6">
+              <AdminTools />
+            </div>
+          </section>
 
-      <section class="mt-8">
-        <AdminTools />
-      </section>
+          {/* Right Column: Banzuke */}
+          <section>
+            <BanzukeSync />
+          </section>
+        </div>
+      </div>
     </div>
   );
 }
