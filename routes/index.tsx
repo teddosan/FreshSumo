@@ -36,10 +36,13 @@ export const handler: Handlers<Data> = {
       -- We join banzuke on either side of the match
       JOIN banzuke b ON (r.east_id = b.rikishi_id OR r.west_id = b.rikishi_id)
       WHERE r.basho_id = 202603
+        AND r.day <= ${ctx.state.watchedDay}
         AND b.owner IS NOT NULL
       GROUP BY b.owner
       ORDER BY wins DESC;
     `);
+
+    console.log("Standings Rows:", rows);
 
     const standingsRows = rows as unknown as Array<[string, number, number]>;
 

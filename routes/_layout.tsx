@@ -71,7 +71,7 @@ export default function Layout({ Component, state, url }: PageProps) {
         </div>
 
         {/* Action Center stays at the bottom of the sidebar globally */}
-        <div class="mt-auto pt-6 border-t border-indigo-800">
+        <div class="mt-auto pt-6">
           {user
             ? (
               <div class="space-y-3">

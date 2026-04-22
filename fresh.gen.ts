@@ -25,6 +25,7 @@ import * as $test_page from "./routes/test_page.tsx";
 import * as $AdminTools from "./islands/AdminTools.tsx";
 import * as $BanzukeSync from "./islands/BanzukeSync.tsx";
 import * as $DraftButton from "./islands/DraftButton.tsx";
+import * as $MatchHistory from "./islands/MatchHistory.tsx";
 import * as $ReleaseButton from "./islands/ReleaseButton.tsx";
 import * as $ResultsSync from "./islands/ResultsSync.tsx";
 import * as $SpoilerShield from "./islands/SpoilerShield.tsx";
@@ -58,6 +59,7 @@ const manifest = {
     "./islands/AdminTools.tsx": $AdminTools,
     "./islands/BanzukeSync.tsx": $BanzukeSync,
     "./islands/DraftButton.tsx": $DraftButton,
+    "./islands/MatchHistory.tsx": $MatchHistory,
     "./islands/ReleaseButton.tsx": $ReleaseButton,
     "./islands/ResultsSync.tsx": $ResultsSync,
     "./islands/SpoilerShield.tsx": $SpoilerShield,

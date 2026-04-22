@@ -41,6 +41,7 @@ export const handler: Handlers<Data> = {
   FROM wrestlers w
   JOIN banzuke b ON w.rikishi_id = b.rikishi_id
   WHERE b.basho_id = 202603
+  AND b.rank NOT LIKE 'J%' -- Exclude Juryo wrestlers
   ORDER BY 
     CASE 
       WHEN b.rank LIKE 'Y%' THEN 1
