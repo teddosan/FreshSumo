@@ -4,6 +4,7 @@ import { useState } from "preact/hooks";
 interface DraftProps {
   rikishiId: number;
   initialOwner: string | null;
+  currentUser: string;
 }
 
 export default function DraftButton(

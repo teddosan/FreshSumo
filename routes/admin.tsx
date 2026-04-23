@@ -1,5 +1,5 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
+import { Pool } from "npm:pg";
 import { useComputed } from "@preact/signals";
 import ResultsSync from "../islands/ResultsSync.tsx";
 import BanzukeSync from "../islands/BanzukeSync.tsx";
@@ -60,9 +60,9 @@ export const handler: Handlers = {
       }
 
       case "database_reinit": {
-        const db = new DB("sumo.db");
+        const db = new Pool();
         // Use the refactored schema we discussed to keep your results and banzuke separated!
-        db.execute(`
+        db.query(`
         DROP TABLE IF EXISTS results;
         DROP TABLE IF EXISTS banzuke;
         DROP TABLE IF EXISTS tournaments;
@@ -102,7 +102,6 @@ export const handler: Handlers = {
           FOREIGN KEY (winner_id) REFERENCES wrestlers(rikishi_id)
         );  
         `);
-        db.close();
         break;
       }
 

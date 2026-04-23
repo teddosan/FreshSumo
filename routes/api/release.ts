@@ -1,18 +1,20 @@
 import { Handlers } from "$fresh/server.ts";
-import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
+import { Pool } from "npm:pg";
 
 export const handler: Handlers = {
   async POST(req) {
     const { name } = await req.json();
-    const db = new DB("sumo.db");
+    const db = new Pool();
 
     try {
-      db.query("DELETE FROM wrestlers WHERE name = ?", [name]);
+      db.query("DELETE FROM wrestlers WHERE name = $1", [name]);
       db.close();
       return new Response(JSON.stringify({ success: true }));
     } catch (err) {
       db.close();
-      return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: err.message }), {
+        status: 500,
+      });
     }
   },
 };

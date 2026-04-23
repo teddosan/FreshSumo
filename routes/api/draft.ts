@@ -1,7 +1,7 @@
 import { Handlers } from "$fresh/server.ts";
-import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
+import { Pool } from "npm:pg";
 
-export const db = new DB("sumo.db");
+export const db = new Pool();
 
 export const handler: Handlers<any> = {
   async POST(req, ctx) {
@@ -15,7 +15,7 @@ export const handler: Handlers<any> = {
 
     // Update the DB with the ACTUAL logged-in user
     db.query(
-      "UPDATE banzuke SET owner = ? WHERE rikishi_id = ? AND owner IS NULL",
+      "UPDATE banzuke SET owner = $1 WHERE rikishi_id = $2 AND owner IS NULL",
       [username, rikishiId],
     );
 

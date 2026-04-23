@@ -1,5 +1,5 @@
-import { DB } from "https://deno.land/x/sqlite/mod.ts";
 import { useState } from "preact/hooks";
+import { Pool } from "npm:pg";
 
 interface Rikishi {
   name: string;
@@ -9,7 +9,7 @@ interface Rikishi {
 const basho_day = 15; // You can change this to the current day of the basho
 
 function initDatabase() {
-  const db = new DB("sumo.db");
+  const db = new Pool();
 
   // This creates the 'daily_results' table if it doesn't already exist
   db.execute(`
@@ -41,7 +41,7 @@ async function updateDailyResults(day: number) {
   const response = await fetch(url);
   const data = await response.json(); // This is an array of bouts
 
-  const db = new DB("sumo.db");
+  const db = postgres(Deno.env.get("DATABASE_URL")!);
 
   // Replace the loop in your updateDailyResults function with this:
 

@@ -1,5 +1,5 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
+import { Pool } from "npm:pg";
 import DraftButton from "../islands/DraftButton.tsx";
 import { context } from "https://deno.land/x/esbuild@v0.20.2/mod.d.ts";
 
@@ -18,7 +18,7 @@ interface Data {
 
 export const handler: Handlers<Data> = {
   GET(_req, ctx) {
-    const db = new DB("sumo.db");
+    const db = new Pool();
     const username = ctx.state.user?.username || null;
     const rows = db.query(`
   SELECT 

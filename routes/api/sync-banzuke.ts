@@ -1,8 +1,8 @@
-import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
+import { Pool } from "npm:pg";
 import { Handlers } from "$fresh/server.ts";
 
 async function handleSync(_req: Request) {
-  const db = new DB("sumo.db");
+  const db = new Pool();
 
   try {
     const { bashoId } = await _req.json();
@@ -28,7 +28,7 @@ async function handleSync(_req: Request) {
 
     // 4. Ensure Tournament exists
     db.query(
-      "INSERT OR IGNORE INTO tournaments (basho_id, start_date, end_date) VALUES (?, ?, ?)",
+      "INSERT OR IGNORE INTO tournaments (basho_id, start_date, end_date) VALUES ($1, $2, $3)",
       [bashoId, bData.startDate, bData.endDate],
     );
 
@@ -48,13 +48,13 @@ async function handleSync(_req: Request) {
     for (const entry of allRikishi) {
       // Use INSERT OR REPLACE so shikona updates if they change their name
       db.query(
-        "INSERT OR REPLACE INTO wrestlers (rikishi_id, shikonaEn, shikonaJp) VALUES (?, ?, ?)",
+        "INSERT OR REPLACE INTO wrestlers (rikishi_id, shikonaEn, shikonaJp) VALUES ($1, $2, $3)",
         [entry.rikishiID, entry.shikonaEn, entry.shikonaJp],
       );
 
       db.query(
         `INSERT OR REPLACE INTO banzuke (basho_id, rikishi_id, rank) 
-         VALUES (?, ?, ?)`,
+         VALUES ($1, $2, $3)`,
         [bashoId, entry.rikishiID, entry.rank],
       );
     }

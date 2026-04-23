@@ -1,12 +1,6 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
-
-interface Data {
-  isAllowed: boolean;
-  username: string | null;
-  standings: Standings[];
-  isAdmin: boolean;
-}
+// Import your pool from your db utility file
+import { pool } from "../utils/db.ts";
 
 interface Standings {
   owner: string;
@@ -15,47 +9,52 @@ interface Standings {
   winRate: string;
 }
 
+interface Data {
+  isAllowed: boolean;
+  username: string | null;
+  standings: Standings[];
+  isAdmin: boolean;
+}
+
 export const handler: Handlers<Data> = {
-  GET(_req, ctx) {
-    const db = new DB("sumo.db");
+  // 1. MUST be async
+  async GET(_req, ctx) {
     const user = ctx.state.user as
       | { username?: string; isAdmin?: boolean }
       | null;
     const isAllowed = !!user;
+    const watchedDay = ctx.state.watchedDay || 15;
 
-    const rows = db.query(`
+    // 2. Use $1 for parameters. Using template literals (${}) in SQL is dangerous!
+    const query = `
       SELECT 
         b.owner, 
-      COUNT(CASE WHEN r.winner_id = b.rikishi_id THEN 1 END) as wins,
-      COUNT(*) as total,
-      ROUND(
-        CAST(COUNT(CASE WHEN r.winner_id = b.rikishi_id THEN 1 END) AS FLOAT) / COUNT(*) * 100, 
-        2
-      ) || '%' as win_rate
+        COUNT(CASE WHEN r.winner_id = b.rikishi_id THEN 1 END)::INT as wins,
+        COUNT(*)::INT as total,
+        ROUND(
+          (COUNT(CASE WHEN r.winner_id = b.rikishi_id THEN 1 END)::DECIMAL / 
+          NULLIF(COUNT(*), 0)) * 100, 
+          1
+        ) as win_rate_num
       FROM results r
-      -- We join banzuke on either side of the match
       JOIN banzuke b ON (r.east_id = b.rikishi_id OR r.west_id = b.rikishi_id)
       WHERE r.basho_id = 202603
-        AND r.day <= ${ctx.state.watchedDay}
+        AND r.day <= $1
         AND b.owner IS NOT NULL
       GROUP BY b.owner
       ORDER BY wins DESC;
-    `);
+    `;
 
-    console.log("Standings Rows:", rows);
+    // 3. Await the pool query
+    const result = await pool.query(query, [watchedDay]);
 
-    const standingsRows = rows as unknown as Array<[string, number, number]>;
-
-    const standings: Standings[] = standingsRows.map((
-      [owner, wins, total],
-    ) => ({
-      owner,
-      wins,
-      totalMatches: total,
-      winRate: ((wins / total) * 100).toFixed(1) + "%",
+    // 4. Map the rows (Postgres returns objects, not arrays)
+    const standings: Standings[] = result.rows.map((row: any) => ({
+      owner: row.owner,
+      wins: row.wins,
+      totalMatches: row.total,
+      winRate: (row.win_rate_num || 0) + "%",
     }));
-
-    db.close();
 
     return ctx.render({
       standings,
@@ -67,10 +66,9 @@ export const handler: Handlers<Data> = {
 };
 
 export default function Home({ data }: PageProps<Data>) {
+  // Component remains exactly the same as your draft
   return (
-    // 1. Flex container to hold Sidebar and Content side-by-side
     <div class="flex min-h-screen bg-slate-50 font-sans text-slate-900">
-      {/* MAIN CONTENT AREA */}
       <div class="flex-grow">
         <header class="bg-indigo-900 text-white py-12 px-8 shadow-lg">
           <h1 class="text-4xl font-black tracking-tighter uppercase mb-2 text-center">
@@ -85,6 +83,7 @@ export default function Home({ data }: PageProps<Data>) {
           <div class="space-y-4">
             {data.standings.map((player: Standings, index: number) => (
               <div
+                key={player.owner}
                 class={`bg-white rounded-2xl p-6 shadow-sm border-2 flex items-center justify-between transition-transform hover:scale-[1.01] ${
                   index === 0
                     ? "border-amber-400 ring-4 ring-amber-100"
@@ -122,7 +121,7 @@ export default function Home({ data }: PageProps<Data>) {
 
           <footer class="mt-12 text-center text-slate-400 text-xs">
             © 2026 Columbus Sumo League •{" "}
-            {data.isAllowed ? `Session: ${data.username}` : "Guest Access"}
+            {data.isAllowed ? `User: ${data.username}` : "Guest Access"}
             {data.isAdmin ? " • Admin Privileges" : " • Peasant"}
           </footer>
         </main>

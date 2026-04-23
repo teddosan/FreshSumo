@@ -1,72 +1,24 @@
-import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
+import { pool } from "./db.ts";
 import { Resend } from "resend";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const resend = new Resend(RESEND_API_KEY!);
-export function runQuery(sql: string, params: any[] = []) {
-  const db = new DB("sumo.db");
-  db.execute("PRAGMA journal_mode = WAL;");
-  try {
-    return [...db.query(sql, params)];
-  } finally {
-    db.close();
-  }
+
+// Generic helper - now async
+export async function runQuery(sql: string, params: any[] = []) {
+  const result = await pool.query(sql, params);
+  return result.rows;
 }
 
-// Open DB
-/*export const db = new DB("sumo.db");
-/*
-// Performance tweak
-db.execute(`PRAGMA journal_mode = WAL;`);
-
-// Tables
-db.execute(`
-CREATE TABLE IF NOT EXISTS pending_users (
-  id TEXT PRIMARY KEY,
-  username TEXT UNIQUE NOT NULL,
-  email TEXT NOT NULL,
-  fullname TEXT NOT NULL,
-  password_hash TEXT NOT NULL
-);
-`);
-
-db.execute(`
-CREATE TABLE IF NOT EXISTS users (
-  id TEXT PRIMARY KEY,
-  username TEXT UNIQUE NOT NULL,
-  email TEXT NOT NULL,
-  fullname TEXT NOT NULL,
-  password_hash TEXT NOT NULL
-);
-`);
-
-db.execute(`
-CREATE TABLE IF NOT EXISTS sessions (
-  id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL,
-  expires_at INTEGER NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES users(id)
-);
-`);
-*/
-// -------------------------
-// Helpers
-// -------------------------
-
-export function getUserByUsername(userName: string) {
-  const tempDb = new DB("sumo.db");
-  const rows = [
-    ...tempDb.query(
-      "SELECT id, username, password_hash FROM users WHERE username = ?",
-      [userName],
-    ),
-  ];
-
-  tempDb.close();
+export async function getUserByUsername(userName: string) {
+  const rows = await runQuery(
+    "SELECT id, username, password_hash FROM users WHERE username = $1",
+    [userName],
+  );
 
   if (rows.length === 0) return null;
 
-  const [id, username, password_hash] = rows[0];
+  const { id, username, password_hash } = rows[0];
 
   return {
     id: id as string,
@@ -75,37 +27,31 @@ export function getUserByUsername(userName: string) {
   };
 }
 
-export function getUserById(id: string) {
-  const tempDb = new DB("sumo.db");
-  const rows = [
-    ...tempDb.query(
-      "SELECT id, username FROM users WHERE id = ?",
-      [id],
-    ),
-  ];
-  tempDb.close();
+export async function getUserById(id: string) {
+  const rows = await runQuery(
+    "SELECT id, username FROM users WHERE id = $1",
+    [id],
+  );
+
   if (rows.length === 0) return null;
 
-  const [userId, username] = rows[0];
+  const { id: userId, username } = rows[0];
 
   return {
     id: userId as string,
     username: username as string,
-    /// Change this to eventually check database for admin status
     isAdmin: username === "teddosan",
   };
 }
 
-// Optional but VERY useful for registration
-export function createUser(username: string, passwordHash: string) {
+export async function createUser(username: string, passwordHash: string) {
   const id = crypto.randomUUID();
-  const tempDb = new DB("sumo.db");
 
-  tempDb.query(
-    "INSERT INTO users (id, username, password_hash) VALUES (?, ?, ?)",
+  await runQuery(
+    "INSERT INTO users (id, username, password_hash) VALUES ($1, $2, $3)",
     [id, username, passwordHash],
   );
-  tempDb.close();
+
   return { id, username };
 }
 
@@ -116,14 +62,14 @@ export async function approveUserRegistration(
   passwordHash: string,
 ) {
   const id = crypto.randomUUID();
-  const tempDb = new DB("sumo.db");
 
-  // Change below to pending_users for later production
-  tempDb.query(
-    "INSERT INTO users (id, username, email, fullname, password_hash) VALUES (?, ?, ?, ?, ?)",
+  // Perform DB work first
+  await runQuery(
+    "INSERT INTO users (id, username, email, fullname, password_hash) VALUES ($1, $2, $3, $4, $5)",
     [id, username, email, fullname, passwordHash],
   );
-  tempDb.close();
+
+  // Send email after DB succeeds
   await resend.emails.send({
     from: "Sumo App <onboarding@resend.dev>",
     to: "teddo3@gmail.com",

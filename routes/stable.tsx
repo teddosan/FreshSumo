@@ -1,5 +1,5 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
+import { Pool } from "npm:pg";
 import ReleaseButton from "../islands/ReleaseButton.tsx";
 import MatchHistory from "../islands/MatchHistory.tsx";
 
@@ -25,7 +25,7 @@ interface DraftData {
 
 export const handler: Handlers<DraftData> = {
   GET(_req: Request, ctx) {
-    const db = new DB("sumo.db");
+    const db = new Pool();
     const username = ctx.state.user?.username;
     const watchedDay = ctx.state.watchedDay || 0;
     const currentBasho = 202603; // Or dynamic
@@ -35,7 +35,7 @@ export const handler: Handlers<DraftData> = {
       SELECT w.shikonaEn, w.shikonaJp, b.owner, w.rikishi_id
       FROM wrestlers w
       JOIN banzuke b ON w.rikishi_id = b.rikishi_id
-      WHERE b.owner = ? AND b.basho_id = ?
+      WHERE b.owner = $1 AND b.basho_id = $2
     `,
       [username, currentBasho],
     );
@@ -48,16 +48,16 @@ export const handler: Handlers<DraftData> = {
         SELECT 
           r.day,
           opp.shikonaEn as opponent,
-          (r.winner_id = ?) as isWin,
+          (r.winner_id = $1) as isWin,
           r.kimarite
         FROM results r
         JOIN wrestlers opp ON (
-          (r.east_id = opp.rikishi_id AND r.west_id = ?) OR 
-          (r.west_id = opp.rikishi_id AND r.east_id = ?)
+          (r.east_id = opp.rikishi_id AND r.west_id = $2) OR 
+          (r.west_id = opp.rikishi_id AND r.east_id = $3)
         )
-        WHERE (r.east_id = ? OR r.west_id = ?)
-          AND r.basho_id = ?
-          AND r.day <= ?
+        WHERE (r.east_id = $4 OR r.west_id = $5)
+          AND r.basho_id = $6
+          AND r.day <= $7
         ORDER BY r.day ASC
       `,
           [rid, rid, rid, rid, rid, currentBasho, watchedDay],

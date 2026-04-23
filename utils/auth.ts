@@ -2,39 +2,41 @@ import { getUserById, runQuery } from "./auth_db.ts";
 
 const SESSION_DURATION = 1000 * 60 * 60 * 24 * 7; // 7 days
 
-export function createSession(userId: string) {
+export async function createSession(userId: string) {
   const sessionId = crypto.randomUUID();
   const expiresAt = Date.now() + SESSION_DURATION;
 
-  runQuery(
-    "INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)",
+  // Use $1, $2 syntax for Postgres
+  await runQuery(
+    "INSERT INTO sessions (id, user_id, expires_at) VALUES ($1, $2, $3)",
     [sessionId, userId, expiresAt],
   );
 
   return sessionId;
 }
 
-export function getUserFromSession(sessionId: string) {
-  const rows = [
-    ...runQuery(
-      "SELECT user_id, expires_at FROM sessions WHERE id = ?",
-      [sessionId],
-    ),
-  ];
+export async function getUserFromSession(sessionId: string) {
+  const rows = await runQuery(
+    "SELECT user_id, expires_at FROM sessions WHERE id = $1",
+    [sessionId],
+  );
 
   if (rows.length === 0) return null;
 
-  const [user_id, expires_at] = rows[0];
+  // Postgres returns objects, so we destructure by name
+  const { user_id, expires_at } = rows[0];
 
-  if ((expires_at as number) < Date.now()) {
+  // Compare expiration
+  if (Number(expires_at) < Date.now()) {
     // Optional: clean up expired session
-    runQuery("DELETE FROM sessions WHERE id = ?", [sessionId]);
+    await runQuery("DELETE FROM sessions WHERE id = $1", [sessionId]);
     return null;
   }
 
-  return getUserById(user_id as string);
+  // getUserById is now async, so we must await it
+  return await getUserById(user_id as string);
 }
 
-export function deleteSession(sessionId: string) {
-  runQuery("DELETE FROM sessions WHERE id = ?", [sessionId]);
+export async function deleteSession(sessionId: string) {
+  await runQuery("DELETE FROM sessions WHERE id = $1", [sessionId]);
 }

@@ -1,8 +1,8 @@
-import { DB } from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
+import { Pool } from "npm:pg";
 import { Handlers } from "$fresh/server.ts";
 
 async function handleSync(_req: Request) {
-  const db = new DB("sumo.db");
+  const db = new Pool();
 
   try {
     const { bashoId, day } = await _req.json();
@@ -28,7 +28,7 @@ async function handleSync(_req: Request) {
         db.query(
           `
           INSERT OR REPLACE INTO results (id, basho_id, day, east_id, west_id, winner_id, kimarite)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
           `,
           [
             entry.id,
