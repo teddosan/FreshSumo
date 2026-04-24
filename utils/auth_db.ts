@@ -19,6 +19,7 @@ export async function getUserByUsername(userName: string) {
   if (rows.length === 0) return null;
 
   const { id, username, password_hash } = rows[0];
+  console.log("🔍 User found:", { id, username, password_hash });
 
   return {
     id: id as string,

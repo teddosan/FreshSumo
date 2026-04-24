@@ -3,13 +3,14 @@ import { Pool } from "npm:pg";
 
 const connectionString = Deno.env.get("DATABASE_URL");
 
-export const pool = new Pool({
-  // CORRECT: Wrap the string in an object
-  connectionString: connectionString,
+if (!connectionString) {
+  console.error("🚨 DATABASE_URL IS TOTALLY MISSING!");
+} else {
+  // Check if it's actually the string you expect (don't log the whole thing for security)
+  console.log("✅ DATABASE_URL detected. length:", connectionString.length);
+}
 
-  // Also, since you are connecting from WSL to Windows,
-  // you might need this to avoid SSL issues locally
-  ssl: connectionString?.includes("localhost")
-    ? false
-    : { rejectUnauthorized: false },
+export const pool = new Pool({
+  connectionString,
+  ssl: false,
 });

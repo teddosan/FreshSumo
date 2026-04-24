@@ -20,7 +20,7 @@ export const handler: Handlers = {
     const username = body.get("username")?.toString() || "";
     const password = body.get("password")?.toString() || "";
 
-    const user = getUserByUsername(username);
+    const user = await getUserByUsername(username);
 
     if (!user) {
       return new Response("Invalid credentials", { status: 401 });
@@ -32,7 +32,7 @@ export const handler: Handlers = {
       return new Response("Invalid credentials", { status: 401 });
     }
 
-    const sessionId = createSession(user.id);
+    const sessionId = await createSession(user.id);
 
     const headers = new Headers();
 

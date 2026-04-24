@@ -1,5 +1,5 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { Pool } from "npm:pg";
+import { pool } from "../utils/db.ts";
 import { useComputed } from "@preact/signals";
 import ResultsSync from "../islands/ResultsSync.tsx";
 import BanzukeSync from "../islands/BanzukeSync.tsx";
@@ -60,51 +60,59 @@ export const handler: Handlers = {
       }
 
       case "database_reinit": {
-        const db = new Pool();
-        // Use the refactored schema we discussed to keep your results and banzuke separated!
-        db.query(`
-        DROP TABLE IF EXISTS results;
-        DROP TABLE IF EXISTS banzuke;
-        DROP TABLE IF EXISTS tournaments;
-        DROP TABLE IF EXISTS wrestlers;
-      
-        CREATE TABLE tournaments (
-          basho_id INTEGER PRIMARY KEY,
-          start_date TEXT,
-          end_date TEXT,
-          location TEXT
-        );
-        CREATE TABLE wrestlers (
-          rikishi_id INTEGER PRIMARY KEY,
-          shikonaEn TEXT NOT NULL,
-          shikonaJp TEXT NOT NULL
-        );
-        CREATE TABLE banzuke (
-          basho_id INTEGER NOT NULL,
-          rikishi_id INTEGER NOT NULL,
-          rank TEXT NOT NULL,
-          owner TEXT,
-          PRIMARY KEY (basho_id, rikishi_id),
-          FOREIGN KEY (basho_id) REFERENCES tournaments(basho_id),
-          FOREIGN KEY (rikishi_id) REFERENCES wrestlers(rikishi_id)
-        );
-        CREATE TABLE results (
-          id TEXT PRIMARY KEY,
-          day INTEGER NOT NULL,
-          basho_id INTEGER NOT NULL,
-          west_id INTEGER NOT NULL,
-          east_id INTEGER NOT NULL,
-          winner_id INTEGER NOT NULL,
-          kimarite TEXT,
-          FOREIGN KEY (basho_id) REFERENCES tournaments(basho_id),
-          FOREIGN KEY (west_id) REFERENCES wrestlers(rikishi_id),
-          FOREIGN KEY (east_id) REFERENCES wrestlers(rikishi_id),
-          FOREIGN KEY (winner_id) REFERENCES wrestlers(rikishi_id)
-        );  
-        `);
+        // 1. Array of individual commands
+        const commands = [
+          `DROP TABLE IF EXISTS results CASCADE;`,
+          `DROP TABLE IF EXISTS banzuke CASCADE;`,
+          `DROP TABLE IF EXISTS tournaments CASCADE;`,
+          `DROP TABLE IF EXISTS wrestlers CASCADE;`,
+
+          `CREATE TABLE tournaments (
+      basho_id INTEGER PRIMARY KEY,
+      start_date TEXT,
+      end_date TEXT,
+      location TEXT
+    );`,
+
+          `CREATE TABLE wrestlers (
+      rikishi_id INTEGER PRIMARY KEY,
+      shikona_en TEXT NOT NULL,
+      shikona_jp TEXT NOT NULL
+    );`,
+
+          `CREATE TABLE banzuke (
+      basho_id INTEGER NOT NULL,
+      rikishi_id INTEGER NOT NULL,
+      rank TEXT NOT NULL,
+      owner TEXT,
+      PRIMARY KEY (basho_id, rikishi_id),
+      FOREIGN KEY (basho_id) REFERENCES tournaments(basho_id),
+      FOREIGN KEY (rikishi_id) REFERENCES wrestlers(rikishi_id)
+    );`,
+
+          `CREATE TABLE results (
+      id TEXT PRIMARY KEY,
+      day INTEGER NOT NULL,
+      basho_id INTEGER NOT NULL,
+      west_id INTEGER NOT NULL,
+      east_id INTEGER NOT NULL,
+      winner_id INTEGER NOT NULL,
+      kimarite TEXT,
+      FOREIGN KEY (basho_id) REFERENCES tournaments(basho_id),
+      FOREIGN KEY (west_id) REFERENCES wrestlers(rikishi_id),
+      FOREIGN KEY (east_id) REFERENCES wrestlers(rikishi_id),
+      FOREIGN KEY (winner_id) REFERENCES wrestlers(rikishi_id)
+    );`,
+        ];
+
+        // 2. Execute them in a loop
+        console.log("Starting database re-initialization...");
+        for (const cmd of commands) {
+          await pool.query(cmd);
+        }
+        console.log("Database successfully re-initialized.");
         break;
       }
-
         // ... [Other cases: reset_draft, delete_user, etc.] ...
     }
 

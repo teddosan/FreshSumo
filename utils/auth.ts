@@ -1,4 +1,5 @@
 import { getUserById, runQuery } from "./auth_db.ts";
+import { pool } from "./db.ts";
 
 const SESSION_DURATION = 1000 * 60 * 60 * 24 * 7; // 7 days
 
@@ -16,25 +17,57 @@ export async function createSession(userId: string) {
 }
 
 export async function getUserFromSession(sessionId: string) {
-  const rows = await runQuery(
-    "SELECT user_id, expires_at FROM sessions WHERE id = $1",
+  // DEBUG 1: Is the ID even reaching the function?
+  console.log("--- Debugging Session ---");
+  console.log("Input SessionID:", `"${sessionId}"`); // Quotes help see hidden spaces
+
+  // DEBUG 2: Ignore expiration for a second to see if the ID exists
+  const simpleResult = await pool.query(
+    "SELECT id, expires_at FROM sessions WHERE id = $1",
     [sessionId],
   );
 
-  if (rows.length === 0) return null;
-
-  // Postgres returns objects, so we destructure by name
-  const { user_id, expires_at } = rows[0];
-
-  // Compare expiration
-  if (Number(expires_at) < Date.now()) {
-    // Optional: clean up expired session
-    await runQuery("DELETE FROM sessions WHERE id = $1", [sessionId]);
+  if (simpleResult.rows.length === 0) {
+    console.log("❌ No session found with that ID in the DB.");
     return null;
   }
 
-  // getUserById is now async, so we must await it
-  return await getUserById(user_id as string);
+  const dbSession = simpleResult.rows[0];
+  const now = Date.now();
+  console.log("✅ Session found in DB!");
+  console.log("DB Expiry:", dbSession.expires_at);
+  console.log("Current Time:", now);
+
+  if (Number(dbSession.expires_at) < now) {
+    console.log("❌ Session is expired.");
+    return null;
+  }
+
+  // If we got here, the JOIN is the problem
+  const fullResult = await pool.query(
+    `
+    SELECT u.id, u.username, u.fullname, u.email
+    FROM users u
+    JOIN sessions s ON u.id = s.user_id
+    WHERE s.id = $1
+  `,
+    [sessionId],
+  );
+
+  if (fullResult.rows.length === 0) {
+    console.log(
+      "❌ Session exists, but the user_id doesn't match any user in 'users' table.",
+    );
+    return null;
+  }
+
+  const user = fullResult.rows[0];
+  return {
+    id: user.id,
+    username: user.username,
+    fullname: user.fullname,
+    isAdmin: user.username === "teddosan",
+  };
 }
 
 export async function deleteSession(sessionId: string) {

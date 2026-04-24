@@ -1,9 +1,7 @@
-import { Pool } from "npm:pg";
+import { pool } from "../../utils/db.ts";
 import { Handlers } from "$fresh/server.ts";
 
 async function handleSync(_req: Request) {
-  const db = new Pool();
-
   try {
     const { bashoId } = await _req.json();
 
@@ -18,7 +16,7 @@ async function handleSync(_req: Request) {
       `https://www.sumo-api.com/api/basho/${bashoId}/banzuke/Juryo`,
     );
     const jData = await jResponse.json();
-    console.log("Fetched Makuuchi and Juryo Data");
+    console.log(`Fetched data for Basho ${bashoId}`);
 
     // 3. Fetch Basho Dates
     const bResponse = await fetch(
@@ -26,13 +24,15 @@ async function handleSync(_req: Request) {
     );
     const bData = await bResponse.json();
 
-    // 4. Ensure Tournament exists
-    db.query(
-      "INSERT OR IGNORE INTO tournaments (basho_id, start_date, end_date) VALUES ($1, $2, $3)",
+    // 4. Postgres Upsert: ON CONFLICT DO NOTHING (Replaces INSERT OR IGNORE)
+    await pool.query(
+      `INSERT INTO tournaments (basho_id, start_date, end_date) 
+       VALUES ($1, $2, $3) 
+       ON CONFLICT (basho_id) DO NOTHING`,
       [bashoId, bData.startDate, bData.endDate],
     );
 
-    // 5. Combine all rikishi from both divisions and both sides (East/West)
+    // 5. Combine all rikishi
     const allRikishi = [
       ...(mData.east || []),
       ...(mData.west || []),
@@ -46,42 +46,39 @@ async function handleSync(_req: Request) {
 
     // 6. Process the combined list
     for (const entry of allRikishi) {
-      // Use INSERT OR REPLACE so shikona updates if they change their name
-      db.query(
-        "INSERT OR REPLACE INTO wrestlers (rikishi_id, shikonaEn, shikonaJp) VALUES ($1, $2, $3)",
+      // Postgres Upsert: ON CONFLICT DO UPDATE (Replaces INSERT OR REPLACE)
+      // This ensures if a wrestler changes their Shikona, we update it.
+      await pool.query(
+        `INSERT INTO wrestlers (rikishi_id, shikona_en, shikona_jp) 
+         VALUES ($1, $2, $3) 
+         ON CONFLICT (rikishi_id) 
+         DO UPDATE SET shikona_en = EXCLUDED.shikona_en, shikona_jp = EXCLUDED.shikona_jp`,
         [entry.rikishiID, entry.shikonaEn, entry.shikonaJp],
       );
 
-      db.query(
-        `INSERT OR REPLACE INTO banzuke (basho_id, rikishi_id, rank) 
-         VALUES ($1, $2, $3)`,
+      // Banzuke update: Typically unique by basho + rikishi
+      await pool.query(
+        `INSERT INTO banzuke (basho_id, rikishi_id, rank) 
+         VALUES ($1, $2, $3) 
+         ON CONFLICT (basho_id, rikishi_id) 
+         DO UPDATE SET rank = EXCLUDED.rank`,
         [bashoId, entry.rikishiID, entry.rank],
       );
     }
 
     return { count: allRikishi.length };
-  } finally {
-    db.close();
+  } catch (err) {
+    console.error("Error in handleSync:", err);
+    throw err;
   }
 }
 
-async function handleTestHook(_req: Request) {
-  // This is just a placeholder to show how you can add more admin actions
-  console.log("Test Hook Triggered!");
-  return new Response("", {
-    status: 303,
-    headers: { "Location": "/admin" },
-  });
-}
-
-// ✅ Explicitly handle POST
+// Handler remains mostly the same, ensuring it's async
 export const handler: Handlers = {
   async POST(req) {
-    console.log("Received POST request to /api/sync-banzuke");
+    console.log("Starting Banzuke Sync...");
 
     try {
-      // Execute the sync logic
-      // Assuming handleSync(req) handles the db inserts and returns a summary
       const result = await handleSync(req);
 
       return new Response(
@@ -96,12 +93,10 @@ export const handler: Handlers = {
         },
       );
     } catch (err) {
-      console.error("Sync Error:", err);
-
       return new Response(
         JSON.stringify({
           success: false,
-          error: err.message || "Internal Server Error",
+          error: err instanceof Error ? err.message : "Internal Server Error",
         }),
         {
           status: 500,

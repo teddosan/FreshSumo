@@ -1,7 +1,5 @@
 import { Handlers } from "$fresh/server.ts";
-import { Pool } from "npm:pg";
-
-export const db = new Pool();
+import { pool } from "../../utils/db.ts";
 
 export const handler: Handlers<any> = {
   async POST(req, ctx) {
@@ -14,7 +12,7 @@ export const handler: Handlers<any> = {
     const { rikishiId } = await req.json();
 
     // Update the DB with the ACTUAL logged-in user
-    db.query(
+    await pool.query(
       "UPDATE banzuke SET owner = $1 WHERE rikishi_id = $2 AND owner IS NULL",
       [username, rikishiId],
     );
