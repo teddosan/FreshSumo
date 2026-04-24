@@ -39,7 +39,7 @@ export const handler: Handlers = {
     }
 
     // Check if user exists
-    const existingUser = getUserByUsername(username);
+    const existingUser = await getUserByUsername(username);
 
     if (existingUser) {
       return new Response("User already exists", { status: 400 });
