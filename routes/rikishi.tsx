@@ -13,6 +13,7 @@ interface Rikishi {
 interface Data {
   roster: Rikishi[];
   username: string | null;
+  bashoName: string;
 }
 
 export const handler: Handlers<Data> = {
@@ -40,7 +41,11 @@ export const handler: Handlers<Data> = {
         b.rikishi_id
       FROM wrestlers w
       JOIN banzuke b ON w.rikishi_id = b.rikishi_id
-      WHERE b.basho_id = 202603
+      WHERE b.basho_id = (
+        SELECT value::INTEGER 
+        FROM site_settings 
+        WHERE key = 'current_basho'
+        )
         AND b.rank NOT LIKE 'J%'
       ORDER BY 
       CASE 
@@ -67,7 +72,16 @@ export const handler: Handlers<Data> = {
       rikishi_id: row.rikishi_id,
     }));
 
-    return ctx.render({ roster, username });
+    const nameRes = await pool.query(`
+      SELECT TO_CHAR(TO_DATE(value, 'YYYYMM'), 'FMMonth YYYY') as name 
+      FROM site_settings 
+      WHERE key = 'current_basho'`);
+
+    const bashoName = nameRes.rows.length > 0
+      ? nameRes.rows[0].name
+      : "Unknown Basho";
+
+    return ctx.render({ roster, username, bashoName });
   },
 };
 
@@ -79,7 +93,7 @@ export default function RikishiPage({ data }: PageProps<Data>) {
           Rikishi 👺
         </h1>
         <p class="text-indigo-200 font-medium text-center">
-          March 2026 Official Banzuke
+          {data.bashoName} Official Banzuke
         </p>
       </header>
 

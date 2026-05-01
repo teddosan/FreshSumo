@@ -21,13 +21,13 @@ interface Wrestler {
 interface DraftData {
   myWrestlers: Wrestler[];
   watchedDay: number;
+  bashoName: string;
 }
 
 export const handler: Handlers<DraftData> = {
   async GET(_req: Request, ctx) {
     const username = ctx.state.user?.username;
     const watchedDay = ctx.state.watchedDay || 0;
-    const currentBasho = 202603;
 
     if (!username) {
       return ctx.render({ myWrestlers: [], watchedDay });
@@ -38,8 +38,12 @@ export const handler: Handlers<DraftData> = {
       `SELECT w.shikona_en, w.shikona_jp, b.owner, w.rikishi_id
        FROM wrestlers w
        JOIN banzuke b ON w.rikishi_id = b.rikishi_id
-       WHERE b.owner = $1 AND b.basho_id = $2`,
-      [username, currentBasho],
+       WHERE b.owner = $1 AND b.basho_id = (
+        SELECT value::INTEGER 
+        FROM site_settings 
+        WHERE key = 'current_basho'
+        )`,
+      [username],
     );
 
     const wrestlerRows = wrestlerRes.rows;
@@ -61,11 +65,15 @@ export const handler: Handlers<DraftData> = {
         FROM results r
         JOIN wrestlers e ON r.east_id = e.rikishi_id
         JOIN wrestlers w ON r.west_id = w.rikishi_id
-        WHERE r.basho_id = $1 
-          AND r.day <= $2
-          AND (r.east_id = ANY($3) OR r.west_id = ANY($3))
+        WHERE r.basho_id = (
+        SELECT value::INTEGER 
+        FROM site_settings 
+        WHERE key = 'current_basho'
+        ) 
+          AND r.day <= $1
+          AND (r.east_id = ANY($2) OR r.west_id = ANY($2))
         ORDER BY r.day ASC`,
-        [currentBasho, watchedDay, rikishiIds],
+        [watchedDay, rikishiIds],
       );
       allMatches = matchRes.rows;
     }
@@ -93,7 +101,16 @@ export const handler: Handlers<DraftData> = {
       };
     });
 
-    return ctx.render({ myWrestlers, watchedDay });
+    const nameRes = await pool.query(`
+      SELECT TO_CHAR(TO_DATE(value, 'YYYYMM'), 'FMMonth YYYY') as name 
+      FROM site_settings 
+      WHERE key = 'current_basho'`);
+
+    const bashoName = nameRes.rows.length > 0
+      ? nameRes.rows[0].name
+      : "Unknown Basho";
+
+    return ctx.render({ myWrestlers, watchedDay, bashoName });
   },
 };
 
@@ -106,7 +123,7 @@ export default function StablePage({ data }: PageProps<DraftData>) {
             Rikishi Stable
           </h1>
           <p class="text-slate-500">
-            Record for March basho up to day {data.watchedDay}
+            Record for {data.bashoName} basho up to day {data.watchedDay}
           </p>
         </header>
 

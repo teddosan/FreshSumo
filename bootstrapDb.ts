@@ -10,8 +10,8 @@ const schema = `
     );
     CREATE TABLE wrestlers (
         rikishi_id INTEGER PRIMARY KEY,
-        shikonaEn TEXT NOT NULL,
-        shikonaJp TEXT NOT NULL
+        shikona_en TEXT NOT NULL,
+        shikona_jp TEXT NOT NULL
     );
     CREATE TABLE banzuke (
         basho_id INTEGER NOT NULL,

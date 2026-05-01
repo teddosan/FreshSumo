@@ -14,6 +14,7 @@ interface Data {
   username: string | null;
   standings: Standings[];
   isAdmin: boolean;
+  bashoName: string;
 }
 
 export const handler: Handlers<Data> = {
@@ -38,7 +39,11 @@ export const handler: Handlers<Data> = {
         ) as win_rate_num
       FROM results r
       JOIN banzuke b ON (r.east_id = b.rikishi_id OR r.west_id = b.rikishi_id)
-      WHERE r.basho_id = 202603
+      WHERE r.basho_id = (
+        SELECT value::INTEGER 
+        FROM site_settings 
+        WHERE key = 'current_basho'
+        )
         AND r.day <= $1
         AND b.owner IS NOT NULL
       GROUP BY b.owner
@@ -47,6 +52,15 @@ export const handler: Handlers<Data> = {
 
     // 3. Await the pool query
     const result = await pool.query(query, [watchedDay]);
+
+    const nameRes = await pool.query(`
+      SELECT TO_CHAR(TO_DATE(value, 'YYYYMM'), 'FMMonth YYYY') as name 
+      FROM site_settings 
+      WHERE key = 'current_basho'`);
+
+    const bashoName = nameRes.rows.length > 0
+      ? nameRes.rows[0].name
+      : "Unknown Basho";
 
     // 4. Map the rows (Postgres returns objects, not arrays)
     const standings: Standings[] = result.rows.map((row: any) => ({
@@ -61,6 +75,7 @@ export const handler: Handlers<Data> = {
       isAllowed,
       username: user?.username || null,
       isAdmin: user?.isAdmin || false,
+      bashoName,
     });
   },
 };
@@ -75,7 +90,7 @@ export default function Home({ data }: PageProps<Data>) {
             Columbus Fantasy Sumo League
           </h1>
           <p class="text-indigo-200 font-medium text-center">
-            March 2026 Basho • Standings
+            {data.bashoName} Basho • Standings
           </p>
         </header>
 
