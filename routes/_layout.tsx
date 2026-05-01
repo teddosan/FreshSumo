@@ -11,15 +11,7 @@ export default function Layout({ Component, state, url }: PageProps) {
     <div class="flex min-h-screen bg-slate-50 font-sans text-slate-900">
       {/* SHARED SIDEBAR */}
       <aside class="hidden md:flex flex-col w-72 bg-indigo-950 text-indigo-100 h-screen sticky top-0 p-6 border-r border-indigo-800 shrink-0">
-        <h1 class="text-2xl font-black text-white mb-8 tracking-tighter uppercase">
-          🎏 SumoFantasy
-        </h1>
-
         <nav class="space-y-2 flex-grow">
-          <p class="text-[10px] uppercase tracking-widest font-bold text-indigo-400 mb-2">
-            Menu
-          </p>
-
           <a
             href="/"
             class={`block p-2 rounded-lg font-bold transition ${
@@ -51,6 +43,17 @@ export default function Layout({ Component, state, url }: PageProps) {
             }`}
           >
             📊 All Rikishi
+          </a>
+
+          <a
+            href="/upcoming"
+            class={`block p-2 rounded-lg font-bold transition ${
+              pathname === "/upcoming"
+                ? "bg-indigo-800 text-white"
+                : "hover:bg-indigo-900"
+            }`}
+          >
+            🤼‍♂️ Upcoming Matches
           </a>
 
           {user?.isAdmin && (

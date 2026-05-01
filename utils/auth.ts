@@ -17,11 +17,6 @@ export async function createSession(userId: string) {
 }
 
 export async function getUserFromSession(sessionId: string) {
-  // DEBUG 1: Is the ID even reaching the function?
-  console.log("--- Debugging Session ---");
-  console.log("Input SessionID:", `"${sessionId}"`); // Quotes help see hidden spaces
-
-  // DEBUG 2: Ignore expiration for a second to see if the ID exists
   const simpleResult = await pool.query(
     "SELECT id, expires_at FROM sessions WHERE id = $1",
     [sessionId],
@@ -34,9 +29,6 @@ export async function getUserFromSession(sessionId: string) {
 
   const dbSession = simpleResult.rows[0];
   const now = Date.now();
-  console.log("✅ Session found in DB!");
-  console.log("DB Expiry:", dbSession.expires_at);
-  console.log("Current Time:", now);
 
   if (Number(dbSession.expires_at) < now) {
     console.log("❌ Session is expired.");

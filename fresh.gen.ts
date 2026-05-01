@@ -22,6 +22,7 @@ import * as $reg_complete from "./routes/reg_complete.tsx";
 import * as $register from "./routes/register.tsx";
 import * as $rikishi from "./routes/rikishi.tsx";
 import * as $stable from "./routes/stable.tsx";
+import * as $upcoming from "./routes/upcoming.tsx";
 import * as $AdminTools from "./islands/AdminTools.tsx";
 import * as $BanzukeSync from "./islands/BanzukeSync.tsx";
 import * as $DraftButton from "./islands/DraftButton.tsx";
@@ -55,6 +56,7 @@ const manifest = {
     "./routes/register.tsx": $register,
     "./routes/rikishi.tsx": $rikishi,
     "./routes/stable.tsx": $stable,
+    "./routes/upcoming.tsx": $upcoming,
   },
   islands: {
     "./islands/AdminTools.tsx": $AdminTools,

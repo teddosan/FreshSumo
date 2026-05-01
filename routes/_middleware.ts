@@ -13,6 +13,6 @@ export async function handler(req: Request, ctx: any) {
   ctx.state.isAdmin = user?.username === "teddosan" || false;
   ctx.state.watchedDay = watchedDayNum;
 
-  console.log("Middleware - User:", ctx.state.user);
+  // console.log("Middleware - User:", ctx.state.user);
   return await ctx.next();
 }
