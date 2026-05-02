@@ -36,7 +36,9 @@ export const handler: Handlers<Data> = {
         we.shikona_en AS east_name,
         be.rank AS east_rank,
         ww.shikona_en AS west_name,
-        bw.rank AS west_rank
+        bw.rank AS west_rank,
+        be.owner as east_owner,
+        bw.owner as west_owner
       FROM results r
       JOIN banzuke be ON (r.east_id = be.rikishi_id AND r.basho_id = be.basho_id)
       JOIN banzuke bw ON (r.west_id = bw.rikishi_id AND r.basho_id = bw.basho_id)
@@ -97,6 +99,11 @@ export default function UpcomingPage({ data }: PageProps<Data>) {
                     <h3 class="text-xl font-black text-slate-800">
                       {match.east_name}
                     </h3>
+                    {match.east_owner && (
+      <p class="text-xs font-semibold text-indigo-600 mt-1">
+        👤 {match.east_owner}
+      </p>
+    )}
                   </div>
 
                   <div class="bg-slate-100 px-4 py-2 sm:py-0 border-y sm:border-y-0 sm:border-x border-slate-200 flex items-center justify-center">
@@ -112,6 +119,11 @@ export default function UpcomingPage({ data }: PageProps<Data>) {
                     <h3 class="text-xl font-black text-slate-800">
                       {match.west_name}
                     </h3>
+                    {match.west_owner && (
+      <p class="text-xs font-semibold text-indigo-600 mt-1">
+        👤 {match.west_owner}
+      </p>
+    )}
                   </div>
                 </div>
               ))}
