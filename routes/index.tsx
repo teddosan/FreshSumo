@@ -24,7 +24,7 @@ export const handler: Handlers<Data> = {
       | { username?: string; isAdmin?: boolean }
       | null;
     const isAllowed = !!user;
-    const watchedDay = ctx.state.watchedDay || 15;
+    const watchedDay = ctx.state.watchedDay || 0;
 
     // 2. Use $1 for parameters. Using template literals (${}) in SQL is dangerous!
     const query = `

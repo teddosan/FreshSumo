@@ -61,6 +61,16 @@ export const handler: Handlers = {
           break;
         }
 
+        case "test_hook": {
+          const url = new URL(req.url);
+
+          await fetch(`${url.origin}/api/test-hook`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+          });
+          break;
+        }
+
         default:
           // Handle unknown actions to prevent logic gaps
           console.warn(`Unknown action received: ${action}`);
