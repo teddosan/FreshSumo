@@ -38,7 +38,9 @@ export const handler: Handlers<Data> = {
           1
         ) as win_rate_num
       FROM results r
-      JOIN banzuke b ON (r.east_id = b.rikishi_id OR r.west_id = b.rikishi_id)
+      JOIN banzuke b ON (
+      (r.east_id = b.rikishi_id OR r.west_id = b.rikishi_id)
+      AND b.basho_id = r.basho_id)
       WHERE r.basho_id = (
         SELECT value::INTEGER 
         FROM site_settings 
