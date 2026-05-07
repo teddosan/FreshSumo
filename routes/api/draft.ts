@@ -13,7 +13,11 @@ export const handler: Handlers<any> = {
 
     // Update the DB with the ACTUAL logged-in user
     await pool.query(
-      "UPDATE banzuke SET owner = $1 WHERE rikishi_id = $2 AND owner IS NULL",
+      `
+      UPDATE banzuke SET owner = $1
+      WHERE rikishi_id = $2 
+      AND owner IS NULL 
+      AND basho_id = (SELECT value::INTEGER FROM site_settings WHERE key = 'current_basho')`,
       [username, rikishiId],
     );
 

@@ -24,6 +24,8 @@ async function handleWebhook(_req: Request) {
       body: JSON.stringify(payload),
     });
 
+    console.log(JSON.stringify(payload));
+
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Error ${response.status}: ${errorText}`);
@@ -36,6 +38,3 @@ async function handleWebhook(_req: Request) {
     console.error("Failed to test webhook:", error);
   }
 }
-
-// Usage Example:
-// testWebhookSubscription("validWebhookType", "http://your-server.com/webhook", "super-secret-key");

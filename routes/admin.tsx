@@ -40,34 +40,37 @@ export const handler: Handlers = {
         case "sync_banzuke": {
           const basho_id = data.basho_id;
           const url = new URL(req.url);
-
+          /*
           await fetch(`${url.origin}/api/sync-banzuke`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ basho_id }),
           });
+          */
           break;
         }
 
         case "set_basho": {
           const basho_id = data.basho_id;
           const url = new URL(req.url);
-
+          /*
           await fetch(`${url.origin}/api/set-basho`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ basho_id }),
           });
+          */
           break;
         }
 
         case "test_hook": {
           const url = new URL(req.url);
-
+          /*
           await fetch(`${url.origin}/api/test-hook`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
           });
+          */
           break;
         }
 

@@ -70,6 +70,8 @@ export const handler: Handlers<Data> = {
       winRate: (row.win_rate_num || 0) + "%",
     }));
 
+    console.log("Fetched standings:", standings);
+
     return ctx.render({
       standings,
       isAllowed,

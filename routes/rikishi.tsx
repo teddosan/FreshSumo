@@ -20,10 +20,6 @@ export const handler: Handlers<Data> = {
   async GET(_req, ctx) {
     const username = ctx.state.user?.username || null;
 
-    // Postgres SQL Refactor:
-    // 1. REPLACE(shikona_jp, '　', ' ') works same in PG
-    // 2. STRPOS(string, ' ') replaces INSTR
-    // 3. SUBSTRING(string FROM 1 FOR length) replaces SUBSTR
     const query = `
       SELECT 
         w.shikona_en, 
@@ -47,19 +43,30 @@ export const handler: Handlers<Data> = {
         WHERE key = 'current_basho'
         )
         AND b.rank NOT LIKE 'J%'
-      ORDER BY 
-      CASE 
-        WHEN b.rank LIKE 'Y%' THEN 1
-        WHEN b.rank LIKE 'O%' THEN 2
-        WHEN b.rank LIKE 'S%' THEN 3
-        WHEN b.rank LIKE 'K%' THEN 4
-        WHEN b.rank LIKE 'M%' THEN 5
-        ELSE 6
-      END,
-      -- Extract only the digits (\d+) from the rank string to sort by number
-      NULLIF(substring(b.rank from '\d+'), '')::INTEGER ASC,
-      -- Finally sort by the full string to handle East vs West
-      b.rank ASC;
+ORDER BY 
+  -- 1. Tier Weight (Yokozuna is highest)
+  CASE 
+    WHEN b.rank LIKE 'Y%' THEN 1000
+    WHEN b.rank LIKE 'O%' THEN 2000
+    WHEN b.rank LIKE 'S%' THEN 3000
+    WHEN b.rank LIKE 'K%' THEN 4000
+    WHEN b.rank LIKE 'M%' THEN 5000
+    ELSE 9000
+  END +
+  -- 2. Numerical Weight (Extracts number without regex)
+  -- This replaces all non-digits with empty space, then casts to INT
+  CAST(
+    NULLIF(
+      REGEXP_REPLACE(b.rank, '[^0-9]', '', 'g'), 
+      ''
+    ) AS INTEGER
+  ) * 10 +
+  -- 3. Side Weight (East = 1, West = 2)
+  CASE 
+    WHEN b.rank LIKE '%East' THEN 1
+    WHEN b.rank LIKE '%West' THEN 2
+    ELSE 5
+  END ASC;
     `;
 
     const result = await pool.query(query);
@@ -71,6 +78,8 @@ export const handler: Handlers<Data> = {
       owner: row.owner,
       rikishi_id: row.rikishi_id,
     }));
+
+    console.log(roster);
 
     const nameRes = await pool.query(`
       SELECT TO_CHAR(TO_DATE(value, 'YYYYMM'), 'FMMonth YYYY') as name 
