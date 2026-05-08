@@ -16,7 +16,6 @@ import * as $api_release from "./routes/api/release.ts";
 import * as $api_set_basho from "./routes/api/set-basho.ts";
 import * as $api_sync_banzuke from "./routes/api/sync-banzuke.ts";
 import * as $api_sync_results from "./routes/api/sync-results.ts";
-import * as $api_test_hook from "./routes/api/test-hook.ts";
 import * as $api_webhook_ingestion from "./routes/api/webhook-ingestion.ts";
 import * as $index from "./routes/index.tsx";
 import * as $login from "./routes/login.tsx";
@@ -52,7 +51,6 @@ const manifest = {
     "./routes/api/set-basho.ts": $api_set_basho,
     "./routes/api/sync-banzuke.ts": $api_sync_banzuke,
     "./routes/api/sync-results.ts": $api_sync_results,
-    "./routes/api/test-hook.ts": $api_test_hook,
     "./routes/api/webhook-ingestion.ts": $api_webhook_ingestion,
     "./routes/index.tsx": $index,
     "./routes/login.tsx": $login,

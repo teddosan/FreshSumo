@@ -7,11 +7,14 @@ export const handler: Handlers = {
       // 1. Get the raw body for signature verification if needed
       const bodyText = await req.text();
       const data = JSON.parse(bodyText);
+      console.log("Raw body text:", bodyText); // Debug: Log the raw body text
+      console.log("Parsed JSON data:", data); // Debug: Log the parsed JSON data
 
       // 2. Security Check: Verify the signature header
       // (Assuming the API sends an HMAC-SHA256 signature in the headers)
       const signature = req.headers.get("x-hub-signature-256");
       if (!signature) {
+        console.log("Missing signature header");
         return new Response("Missing signature", { status: 401 });
       }
 

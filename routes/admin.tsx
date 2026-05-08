@@ -5,6 +5,7 @@ import ResultsSync from "../islands/ResultsSync.tsx";
 import BanzukeSync from "../islands/BanzukeSync.tsx";
 import AdminTools from "../islands/AdminTools.tsx";
 import SetCurrent from "../islands/SetCurrent.tsx";
+import { triggerExternalWebhook } from "../utils/test-hooks.ts";
 
 export const handler: Handlers = {
   GET(_req, ctx) {
@@ -24,7 +25,6 @@ export const handler: Handlers = {
     const contentType = req.headers.get("content-type") || "";
     let action: string | null = null;
     let data: any;
-
     try {
       if (contentType.includes("application/json")) {
         data = await req.json();
@@ -35,42 +35,37 @@ export const handler: Handlers = {
         action = data.action;
       }
 
-      // 2. Route the action
       switch (action) {
+        case "test_hook": {
+          // 'data' is already a JS object from your Admin POST handler
+          const selectedType = "newBasho";
+
+          // CALL DIRECTLY - No fetch to self, no JSON stream errors
+          const result = await triggerExternalWebhook(selectedType);
+          console.log("Webhook triggered successfully:", result);
+          break;
+        }
         case "sync_banzuke": {
           const basho_id = data.basho_id;
           const url = new URL(req.url);
-          /*
+
           await fetch(`${url.origin}/api/sync-banzuke`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ basho_id }),
           });
-          */
           break;
         }
 
         case "set_basho": {
           const basho_id = data.basho_id;
           const url = new URL(req.url);
-          /*
+
           await fetch(`${url.origin}/api/set-basho`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ basho_id }),
           });
-          */
-          break;
-        }
-
-        case "test_hook": {
-          const url = new URL(req.url);
-          /*
-          await fetch(`${url.origin}/api/test-hook`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-          });
-          */
           break;
         }
 
@@ -79,20 +74,10 @@ export const handler: Handlers = {
           console.warn(`Unknown action received: ${action}`);
       }
 
-      // 3. Guaranteed Return
-      if (contentType.includes("application/json")) {
-        return new Response(
-          JSON.stringify({ success: true, message: `${action} completed` }),
-          { headers: { "Content-Type": "application/json" } },
-        );
-      }
-
-      return new Response(null, {
-        status: 303,
-        headers: { "Location": "/admin" },
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { "Content-Type": "application/json" },
       });
     } catch (err) {
-      // 4. Error Handling (Crucial for TS and Runtime)
       return new Response(
         JSON.stringify({ error: "Server Error", details: err.message }),
         {
