@@ -7,7 +7,7 @@
     {
       "request": "attach",
       "name": "Attach to Deno",
-      "type": "node",
+      "type": "deno",
       "attachSimplePort": 9229,
       "restart": true
     }

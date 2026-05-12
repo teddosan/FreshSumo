@@ -17,10 +17,13 @@ import * as $api_set_basho from "./routes/api/set-basho.ts";
 import * as $api_sync_banzuke from "./routes/api/sync-banzuke.ts";
 import * as $api_sync_results from "./routes/api/sync-results.ts";
 import * as $api_webhook_ingestion from "./routes/api/webhook-ingestion.ts";
+import * as $forgot_password from "./routes/forgot-password.tsx";
+import * as $forgot_password_success from "./routes/forgot-password/success.tsx";
 import * as $index from "./routes/index.tsx";
 import * as $login from "./routes/login.tsx";
 import * as $reg_complete from "./routes/reg_complete.tsx";
 import * as $register from "./routes/register.tsx";
+import * as $reset_password from "./routes/reset-password.tsx";
 import * as $rikishi from "./routes/rikishi.tsx";
 import * as $stable from "./routes/stable.tsx";
 import * as $upcoming from "./routes/upcoming.tsx";
@@ -52,10 +55,13 @@ const manifest = {
     "./routes/api/sync-banzuke.ts": $api_sync_banzuke,
     "./routes/api/sync-results.ts": $api_sync_results,
     "./routes/api/webhook-ingestion.ts": $api_webhook_ingestion,
+    "./routes/forgot-password.tsx": $forgot_password,
+    "./routes/forgot-password/success.tsx": $forgot_password_success,
     "./routes/index.tsx": $index,
     "./routes/login.tsx": $login,
     "./routes/reg_complete.tsx": $reg_complete,
     "./routes/register.tsx": $register,
+    "./routes/reset-password.tsx": $reset_password,
     "./routes/rikishi.tsx": $rikishi,
     "./routes/stable.tsx": $stable,
     "./routes/upcoming.tsx": $upcoming,

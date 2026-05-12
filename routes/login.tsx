@@ -53,6 +53,14 @@ export default function Login() {
           >
             Register
           </a>
+          <br />
+          Forgot paasword?{" "}
+          <a
+            href="/forgot-password"
+            class="font-bold text-indigo-700 hover:text-indigo-900 underline underline-offset-2"
+          >
+            Password reset
+          </a>
         </p>
       </div>
     </div>
