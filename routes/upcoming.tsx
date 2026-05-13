@@ -50,7 +50,10 @@ export const handler: Handlers<Data> = {
         WHERE key = 'current_basho'
         )
         AND r.day = $1
-      ORDER BY r.id ASC;
+      ORDER BY
+      -- Split into segments by - then sort the third segment as an integer
+      split_part(id, '-', 3)::INTEGER ASC,
+      id ASC;
     `,
       [targetDay],
     );
@@ -100,10 +103,10 @@ export default function UpcomingPage({ data }: PageProps<Data>) {
                       {match.east_name}
                     </h3>
                     {match.east_owner && (
-      <p class="text-xs font-semibold text-indigo-600 mt-1">
-        👤 {match.east_owner}
-      </p>
-    )}
+                      <p class="text-xs font-semibold text-indigo-600 mt-1">
+                        👤 {match.east_owner}
+                      </p>
+                    )}
                   </div>
 
                   <div class="bg-slate-100 px-4 py-2 sm:py-0 border-y sm:border-y-0 sm:border-x border-slate-200 flex items-center justify-center">
@@ -120,10 +123,10 @@ export default function UpcomingPage({ data }: PageProps<Data>) {
                       {match.west_name}
                     </h3>
                     {match.west_owner && (
-      <p class="text-xs font-semibold text-indigo-600 mt-1">
-        👤 {match.west_owner}
-      </p>
-    )}
+                      <p class="text-xs font-semibold text-indigo-600 mt-1">
+                        👤 {match.west_owner}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
